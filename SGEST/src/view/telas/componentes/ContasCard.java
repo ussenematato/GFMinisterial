@@ -2,7 +2,6 @@ package view.telas.componentes;
 
 import controller.ContaController;
 import model.entity.Conta;
-import view.telas.utils.Renderers;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -31,6 +30,7 @@ public class ContasCard extends CardBase {
     public ContasCard(Integer usuarioId, MenuPrincipal menuPrincipal) {
         super(usuarioId, menuPrincipal);
         this.contaController = new ContaController(usuarioId);
+        this.contaEditando = null;
         initComponents();
         carregarDados();
     }
@@ -139,9 +139,9 @@ public class ContasCard extends CardBase {
         tblContas.setRowHeight(30);
         tblContas.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tblContas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        tblContas.getColumnModel().getColumn(3).setCellRenderer(new Renderers.SaldoCellRenderer());
         
         JScrollPane scrollPane = new JScrollPane(tblContas);
+        panel.add(scrollPane, BorderLayout.CENTER);
         
         // Seleção da tabela
         tblContas.getSelectionModel().addListSelectionListener(e -> {
@@ -149,8 +149,6 @@ public class ContasCard extends CardBase {
                 habilitarBotoesEdicao();
             }
         });
-        
-        panel.add(scrollPane, BorderLayout.CENTER);
         
         return panel;
     }
@@ -198,7 +196,7 @@ public class ContasCard extends CardBase {
                 conta.getId(),
                 conta.getNome(),
                 formatarTipoConta(conta.getTipo()),
-                conta.getSaldoAtual(),
+                String.format("R$ %,.2f", conta.getSaldoAtual()),
                 conta.getInstituicao(),
                 conta.getAtivo() ? "Ativa" : "Inativa"
             };
@@ -338,7 +336,7 @@ public class ContasCard extends CardBase {
     }
     
     public void mostrarFormularioNovaConta() {
-        limparFormulario();
+        // Foco no campo nome para nova conta
         txtNome.requestFocus();
     }
 }

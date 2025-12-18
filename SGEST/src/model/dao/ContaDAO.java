@@ -105,6 +105,36 @@ public class ContaDAO {
         }
     }
     
+    public List<String> listarNomesPorUsuario(Integer usuarioId) throws SQLException {
+        List<String> nomes = new ArrayList<>();
+        String sql = "SELECT nome FROM contas WHERE usuario_id = ? AND ativo = TRUE ORDER BY nome";
+        
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, usuarioId);
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                nomes.add(rs.getString("nome"));
+            }
+        }
+        return nomes;
+    }
+    
+    public BigDecimal obterSaldoTotalPorUsuario(Integer usuarioId) throws SQLException {
+        String sql = "SELECT SUM(saldo_atual) as total FROM contas WHERE usuario_id = ? AND ativo = TRUE";
+        
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, usuarioId);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                BigDecimal total = rs.getBigDecimal("total");
+                return total != null ? total : BigDecimal.ZERO;
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+    
     private Conta mapearConta(ResultSet rs) throws SQLException {
         Conta conta = new Conta();
         conta.setId(rs.getInt("id"));

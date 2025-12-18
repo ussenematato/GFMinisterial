@@ -71,6 +71,15 @@ public class ContaController {
         }
     }
     
+    public List<String> listarNomesContas() {
+        try {
+            return contaDAO.listarNomesPorUsuario(usuarioLogadoId);
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar nomes de contas: " + e.getMessage());
+            return List.of();
+        }
+    }
+    
     public Conta buscarContaPorId(Integer id) {
         try {
             Conta conta = contaDAO.buscarPorId(id);
@@ -109,9 +118,11 @@ public class ContaController {
     }
     
     public BigDecimal obterSaldoTotal() {
-        List<Conta> contas = listarContasAtivas();
-        return contas.stream()
-                .map(Conta::getSaldoAtual)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        try {
+            return contaDAO.obterSaldoTotalPorUsuario(usuarioLogadoId);
+        } catch (SQLException e) {
+            System.err.println("Erro ao obter saldo total: " + e.getMessage());
+            return BigDecimal.ZERO;
+        }
     }
 }

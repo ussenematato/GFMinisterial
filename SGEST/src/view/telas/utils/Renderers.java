@@ -40,13 +40,16 @@ public class Renderers {
                 BigDecimal valor = (BigDecimal) value;
                 setText(String.format("R$ %,.2f", valor));
                 
-                // Verificar se é despesa ou receita
+                // Verificar se é despesa ou receita (baseado na coluna tipo)
                 try {
-                    String tipo = (String) table.getValueAt(row, 3); // Ajuste o índice conforme sua tabela
-                    if ("DESPESA".equals(tipo)) {
-                        setForeground(new Color(229, 57, 53));
-                    } else {
-                        setForeground(new Color(46, 125, 50));
+                    int tipoColumn = getTipoColumn(table);
+                    if (tipoColumn >= 0) {
+                        String tipo = (String) table.getValueAt(row, tipoColumn);
+                        if ("DESPESA".equals(tipo)) {
+                            setForeground(new Color(229, 57, 53));
+                        } else if ("RECEITA".equals(tipo)) {
+                            setForeground(new Color(46, 125, 50));
+                        }
                     }
                 } catch (Exception e) {
                     // Se não conseguir determinar o tipo, usa cor padrão
@@ -56,6 +59,19 @@ public class Renderers {
             }
             
             return c;
+        }
+        
+        private int getTipoColumn(JTable table) {
+            for (int i = 0; i < table.getColumnCount(); i++) {
+                String columnName = table.getColumnName(i);
+                if (columnName != null && 
+                    (columnName.equalsIgnoreCase("tipo") || 
+                     columnName.equalsIgnoreCase("status") ||
+                     columnName.equalsIgnoreCase("categoria"))) {
+                    return i;
+                }
+            }
+            return -1;
         }
     }
     
@@ -69,12 +85,15 @@ public class Renderers {
             if (value instanceof String) {
                 String status = (String) value;
                 
-                if ("DESPESA".equals(status)) {
+                if ("DESPESA".equalsIgnoreCase(status) || 
+                    "PENDENTE".equalsIgnoreCase(status) ||
+                    "NÃO PAGO".equalsIgnoreCase(status)) {
                     label.setForeground(new Color(229, 57, 53));
-                    label.setText("Despesa");
-                } else if ("RECEITA".equals(status)) {
+                    label.setText(status);
+                } else if ("RECEITA".equalsIgnoreCase(status) || 
+                           "PAGO".equalsIgnoreCase(status)) {
                     label.setForeground(new Color(46, 125, 50));
-                    label.setText("Receita");
+                    label.setText(status);
                 }
             }
             

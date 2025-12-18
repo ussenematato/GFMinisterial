@@ -1,6 +1,5 @@
 package view.telas;
 
-import view.telas.MenuPrincipal;
 import javax.swing.*;
 
 public class Main {
@@ -8,9 +7,7 @@ public class Main {
         // Configurar Look and Feel (FlatLaf)
         try {
             com.formdev.flatlaf.FlatLightLaf.setup();
-            // Ou para tema escuro: com.formdev.flatlaf.FlatDarkLaf.setup();
         } catch (Exception e) {
-            e.printStackTrace();
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception ex) {
@@ -19,10 +16,19 @@ public class Main {
         }
         
         SwingUtilities.invokeLater(() -> {
-            // Para teste, use usuário ID 1
-            MenuPrincipal menu = new MenuPrincipal(1);
-            menu.setVisible(true);
-            menu.setLocationRelativeTo(null);
+            try {
+                // Para teste, use usuário ID 1
+                MenuPrincipal menu = new MenuPrincipal(1);
+                menu.setVisible(true);
+                menu.setLocationRelativeTo(null);
+                menu.mostrarTela("DASHBOARD"); // Iniciar com o Dashboard
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, 
+                    "Erro ao iniciar sistema: " + e.getMessage(), 
+                    "Erro", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
         });
     }
 }

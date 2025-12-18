@@ -4,7 +4,6 @@ import controller.ContaController;
 import controller.TransacaoController;
 import model.entity.Conta;
 import model.entity.Transacao;
-import view.telas.utils.Renderers;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -146,7 +145,9 @@ public class DashboardCard extends CardBase {
         tblContas.setRowHeight(30);
         tblContas.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tblContas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        tblContas.getColumnModel().getColumn(2).setCellRenderer(new Renderers.SaldoCellRenderer());
+        
+        // Renderer personalizado para saldo (sem usar a classe Renderers)
+        tblContas.getColumnModel().getColumn(2).setCellRenderer(new SaldoCellRendererCustom());
         
         JScrollPane scrollPane = new JScrollPane(tblContas);
         scrollPane.setPreferredSize(new Dimension(400, 200));
@@ -179,6 +180,30 @@ public class DashboardCard extends CardBase {
         return panel;
     }
     
+    // Classe interna para renderizar saldo
+    private class SaldoCellRendererCustom extends javax.swing.table.DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            
+            if (value instanceof BigDecimal) {
+                BigDecimal saldo = (BigDecimal) value;
+                setText(String.format("R$ %,.2f", saldo));
+                
+                if (saldo.compareTo(BigDecimal.ZERO) >= 0) {
+                    setForeground(new Color(46, 125, 50));
+                } else {
+                    setForeground(new Color(229, 57, 53));
+                }
+                
+                setHorizontalAlignment(SwingConstants.RIGHT);
+            }
+            
+            return c;
+        }
+    }
+    
     private JPanel criarPanelTransacoes() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setBorder(BorderFactory.createCompoundBorder(
@@ -199,7 +224,9 @@ public class DashboardCard extends CardBase {
         tblUltimasTransacoes.setRowHeight(30);
         tblUltimasTransacoes.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tblUltimasTransacoes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        tblUltimasTransacoes.getColumnModel().getColumn(2).setCellRenderer(new Renderers.ValorCellRenderer());
+        
+        // Renderer personalizado para valor (sem usar a classe Renderers)
+        tblUltimasTransacoes.getColumnModel().getColumn(2).setCellRenderer(new ValorCellRendererCustom());
         
         JScrollPane scrollPane = new JScrollPane(tblUltimasTransacoes);
         
@@ -229,6 +256,38 @@ public class DashboardCard extends CardBase {
         panel.add(panelBotoes, BorderLayout.SOUTH);
         
         return panel;
+    }
+    
+    // Classe interna para renderizar valor
+    private class ValorCellRendererCustom extends javax.swing.table.DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            
+            if (value instanceof BigDecimal) {
+                BigDecimal valor = (BigDecimal) value;
+                setText(String.format("R$ %,.2f", valor));
+                
+                // Determinar cor baseado no tipo (despesa ou receita)
+                try {
+                    String status = (String) table.getValueAt(row, 3); // Coluna Status
+                    if (status != null) {
+                        if ("DESPESA".equals(status.toUpperCase())) {
+                            setForeground(new Color(229, 57, 53));
+                        } else {
+                            setForeground(new Color(46, 125, 50));
+                        }
+                    }
+                } catch (Exception e) {
+                    // Se não conseguir determinar, usa cor padrão
+                }
+                
+                setHorizontalAlignment(SwingConstants.RIGHT);
+            }
+            
+            return c;
+        }
     }
     
     private JPanel criarPanelBotoesRapidos() {

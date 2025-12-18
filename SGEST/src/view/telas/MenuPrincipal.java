@@ -33,7 +33,7 @@ public class MenuPrincipal extends JFrame {
     }
     
     private void initComponents() {
-        setTitle("Sistema de Gestão Financeira - Menu Principal");
+        setTitle("Sistema de Gestão Financeira");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setPreferredSize(new Dimension(1200, 700));
         
@@ -52,7 +52,7 @@ public class MenuPrincipal extends JFrame {
         relatoriosCard = new RelatoriosCard(usuarioId, this);
         
         // Adicionar cards ao painel
-        cardPanel.add(dashboardCard, "DASHBOARD");
+        cardPanel.add(dashboardCard, "INICIO");
         cardPanel.add(contasCard, "CONTAS");
         cardPanel.add(categoriasCard, "CATEGORIAS");
         cardPanel.add(transacoesCard, "TRANSAÇÕES");
@@ -64,30 +64,45 @@ public class MenuPrincipal extends JFrame {
         // Centralizar na tela
         pack();
         setLocationRelativeTo(null);
+        
+        // Mostrar tela inicial
+        mostrarTela("INICIO");
     }
     
     private void setupMenu() {
         menuBar = new JMenuBar();
         
-        // Menu Cadastros
-        JMenu menuCadastros = new JMenu("Cadastros");
-        menuCadastros.setMnemonic(KeyEvent.VK_C);
+        // Menu Início
+        JMenu menuInicio = new JMenu("Início");
+        menuInicio.setMnemonic(KeyEvent.VK_I);
         
-        JMenuItem itemDashboard = new JMenuItem("Dashboard");
-        JMenuItem itemContas = new JMenuItem("Contas");
-        JMenuItem itemCategorias = new JMenuItem("Categorias");
-        JMenuItem itemTransacoes = new JMenuItem("Transações");
+        JMenuItem itemInicio = new JMenuItem("Página Inicial");
+        itemInicio.addActionListener(e -> mostrarTela("INICIO"));
+        menuInicio.add(itemInicio);
         
-        itemDashboard.addActionListener(e -> mostrarTela("DASHBOARD"));
+        // Menu Contas
+        JMenu menuContas = new JMenu("Contas");
+        menuContas.setMnemonic(KeyEvent.VK_C);
+        
+        JMenuItem itemContas = new JMenuItem("Gerenciar Contas");
         itemContas.addActionListener(e -> mostrarTela("CONTAS"));
-        itemCategorias.addActionListener(e -> mostrarTela("CATEGORIAS"));
-        itemTransacoes.addActionListener(e -> mostrarTela("TRANSAÇÕES"));
+        menuContas.add(itemContas);
         
-        menuCadastros.add(itemDashboard);
-        menuCadastros.addSeparator();
-        menuCadastros.add(itemContas);
-        menuCadastros.add(itemCategorias);
-        menuCadastros.add(itemTransacoes);
+        // Menu Categorias
+        JMenu menuCategorias = new JMenu("Categorias");
+        menuCategorias.setMnemonic(KeyEvent.VK_G);
+        
+        JMenuItem itemCategorias = new JMenuItem("Gerenciar Categorias");
+        itemCategorias.addActionListener(e -> mostrarTela("CATEGORIAS"));
+        menuCategorias.add(itemCategorias);
+        
+        // Menu Transações
+        JMenu menuTransacoes = new JMenu("Transações");
+        menuTransacoes.setMnemonic(KeyEvent.VK_T);
+        
+        JMenuItem itemTransacoes = new JMenuItem("Gerenciar Transações");
+        itemTransacoes.addActionListener(e -> mostrarTela("TRANSAÇÕES"));
+        menuTransacoes.add(itemTransacoes);
         
         // Menu Relatórios
         JMenu menuRelatorios = new JMenu("Relatórios");
@@ -95,10 +110,18 @@ public class MenuPrincipal extends JFrame {
         
         JMenuItem itemRelatorios = new JMenuItem("Relatórios");
         itemRelatorios.addActionListener(e -> mostrarTela("RELATORIOS"));
-        
         menuRelatorios.add(itemRelatorios);
         
-        // Menu Ajuda
+        // Adicionar todos os menus à barra
+        menuBar.add(menuInicio);
+        menuBar.add(menuContas);
+        menuBar.add(menuCategorias);
+        menuBar.add(menuTransacoes);
+        menuBar.add(menuRelatorios);
+        
+        // Menu Ajuda (à direita)
+        menuBar.add(Box.createHorizontalGlue()); // Empurra para a direita
+        
         JMenu menuAjuda = new JMenu("Ajuda");
         menuAjuda.setMnemonic(KeyEvent.VK_A);
         
@@ -112,10 +135,6 @@ public class MenuPrincipal extends JFrame {
         menuAjuda.addSeparator();
         menuAjuda.add(itemSair);
         
-        // Adicionar menus à barra
-        menuBar.add(menuCadastros);
-        menuBar.add(menuRelatorios);
-        menuBar.add(Box.createHorizontalGlue()); // Empurra para a direita
         menuBar.add(menuAjuda);
         
         setJMenuBar(menuBar);
@@ -123,17 +142,29 @@ public class MenuPrincipal extends JFrame {
     
     private void setupCards() {
         // Configurar callbacks para atualização
-        contasCard.setOnUpdateCallback(() -> {
-            dashboardCard.atualizarDados();
-        });
+        if (contasCard != null) {
+            contasCard.setOnUpdateCallback(() -> {
+                if (dashboardCard != null) {
+                    dashboardCard.atualizarDados();
+                }
+            });
+        }
         
-        categoriasCard.setOnUpdateCallback(() -> {
-            transacoesCard.recarregarCategorias();
-        });
+        if (categoriasCard != null) {
+            categoriasCard.setOnUpdateCallback(() -> {
+                if (transacoesCard != null) {
+                    transacoesCard.recarregarCategorias();
+                }
+            });
+        }
         
-        transacoesCard.setOnUpdateCallback(() -> {
-            dashboardCard.atualizarDados();
-        });
+        if (transacoesCard != null) {
+            transacoesCard.setOnUpdateCallback(() -> {
+                if (dashboardCard != null) {
+                    dashboardCard.atualizarDados();
+                }
+            });
+        }
     }
     
     private void setupKeyboardShortcuts() {
@@ -141,17 +172,17 @@ public class MenuPrincipal extends JFrame {
         InputMap inputMap = cardPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = cardPanel.getActionMap();
         
-        // Ctrl+1: Dashboard
-        inputMap.put(KeyStroke.getKeyStroke("control 1"), "showDashboard");
-        actionMap.put("showDashboard", new AbstractAction() {
+        // Ctrl+I: Início
+        inputMap.put(KeyStroke.getKeyStroke("control I"), "showInicio");
+        actionMap.put("showInicio", new AbstractAction() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                mostrarTela("DASHBOARD");
+                mostrarTela("INICIO");
             }
         });
         
-        // Ctrl+2: Contas
-        inputMap.put(KeyStroke.getKeyStroke("control 2"), "showContas");
+        // Ctrl+C: Contas
+        inputMap.put(KeyStroke.getKeyStroke("control C"), "showContas");
         actionMap.put("showContas", new AbstractAction() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -159,12 +190,30 @@ public class MenuPrincipal extends JFrame {
             }
         });
         
-        // Ctrl+3: Transações
-        inputMap.put(KeyStroke.getKeyStroke("control 3"), "showTransacoes");
+        // Ctrl+G: Categorias
+        inputMap.put(KeyStroke.getKeyStroke("control G"), "showCategorias");
+        actionMap.put("showCategorias", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                mostrarTela("CATEGORIAS");
+            }
+        });
+        
+        // Ctrl+T: Transações
+        inputMap.put(KeyStroke.getKeyStroke("control T"), "showTransacoes");
         actionMap.put("showTransacoes", new AbstractAction() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 mostrarTela("TRANSAÇÕES");
+            }
+        });
+        
+        // Ctrl+R: Relatórios
+        inputMap.put(KeyStroke.getKeyStroke("control R"), "showRelatorios");
+        actionMap.put("showRelatorios", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                mostrarTela("RELATORIOS");
             }
         });
         
@@ -185,20 +234,30 @@ public class MenuPrincipal extends JFrame {
         
         // Atualizar dados da tela específica
         switch (tela) {
-            case "DASHBOARD":
-                dashboardCard.atualizarDados();
+            case "INICIO":
+                if (dashboardCard != null) {
+                    dashboardCard.atualizarDados();
+                }
                 break;
             case "CONTAS":
-                contasCard.carregarDados();
+                if (contasCard != null) {
+                    contasCard.carregarDados();
+                }
                 break;
             case "CATEGORIAS":
-                categoriasCard.carregarDados();
+                if (categoriasCard != null) {
+                    categoriasCard.carregarDados();
+                }
                 break;
             case "TRANSAÇÕES":
-                transacoesCard.carregarDados();
+                if (transacoesCard != null) {
+                    transacoesCard.carregarDados();
+                }
                 break;
             case "RELATORIOS":
-                relatoriosCard.carregarDados();
+                if (relatoriosCard != null) {
+                    relatoriosCard.carregarDados();
+                }
                 break;
         }
     }
@@ -206,8 +265,8 @@ public class MenuPrincipal extends JFrame {
     private void atualizarTitulo(String tela) {
         String titulo = "Sistema de Gestão Financeira - ";
         switch (tela) {
-            case "DASHBOARD":
-                titulo += "Dashboard";
+            case "INICIO":
+                titulo += "Página Inicial";
                 break;
             case "CONTAS":
                 titulo += "Gerenciar Contas";
@@ -227,12 +286,16 @@ public class MenuPrincipal extends JFrame {
     
     public void mostrarFormularioNovaConta() {
         mostrarTela("CONTAS");
-        contasCard.mostrarFormularioNovaConta();
+        if (contasCard != null) {
+            contasCard.mostrarFormularioNovaConta();
+        }
     }
     
     public void mostrarFormularioNovaTransacao() {
         mostrarTela("TRANSAÇÕES");
-        transacoesCard.mostrarAbaCadastro();
+        if (transacoesCard != null) {
+            transacoesCard.mostrarAbaCadastro();
+        }
     }
     
     private void mostrarSobre() {
@@ -255,18 +318,5 @@ public class MenuPrincipal extends JFrame {
         if (confirm == JOptionPane.YES_OPTION) {
             System.exit(0);
         }
-    }
-    
-    // Getters para os cards (se necessário)
-    public DashboardCard getDashboardCard() {
-        return dashboardCard;
-    }
-    
-    public ContasCard getContasCard() {
-        return contasCard;
-    }
-    
-    public TransacoesCard getTransacoesCard() {
-        return transacoesCard;
     }
 }

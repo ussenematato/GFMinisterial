@@ -9,43 +9,78 @@ public class Categoria {
     private String cor;
     private Boolean ativo;
     
+    // Construtores
     public Categoria() {
         this.ativo = true;
-        this.cor = "#2196F3";
     }
     
-    public Categoria(String nome, String tipo, String descricao, 
-                    Integer usuarioId, String cor) {
+    public Categoria(String nome, String tipo, String descricao, Integer usuarioId, String cor) {
         this();
         this.nome = nome;
-        this.tipo = tipo;
+        this.tipo = tipo != null ? tipo.toUpperCase() : "DESPESA";
         this.descricao = descricao;
         this.usuarioId = usuarioId;
-        this.cor = cor != null ? cor : "#2196F3";
+        this.cor = cor;
     }
     
     // Getters e Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public Integer getId() {
+        return id;
+    }
     
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
     
-    public String getTipo() { return tipo; }
-    public void setTipo(String tipo) { this.tipo = tipo; }
+    public String getNome() {
+        return nome;
+    }
     
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
     
-    public Integer getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(Integer usuarioId) { this.usuarioId = usuarioId; }
+    public String getTipo() {
+        return tipo;
+    }
     
-    public String getCor() { return cor; }
-    public void setCor(String cor) { this.cor = cor; }
+    public void setTipo(String tipo) {
+        this.tipo = tipo != null ? tipo.toUpperCase() : "DESPESA";
+    }
     
-    public Boolean getAtivo() { return ativo; }
-    public void setAtivo(Boolean ativo) { this.ativo = ativo; }
+    public String getDescricao() {
+        return descricao;
+    }
     
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+    
+    public Integer getUsuarioId() {
+        return usuarioId;
+    }
+    
+    public void setUsuarioId(Integer usuarioId) {
+        this.usuarioId = usuarioId;
+    }
+    
+    public String getCor() {
+        return cor;
+    }
+    
+    public void setCor(String cor) {
+        this.cor = cor;
+    }
+    
+    public Boolean getAtivo() {
+        return ativo;
+    }
+    
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
+    }
+    
+    // Métodos utilitários
     @Override
     public String toString() {
         return nome + " (" + tipo + ")";

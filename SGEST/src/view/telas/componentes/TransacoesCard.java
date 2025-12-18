@@ -6,7 +6,6 @@ import controller.CategoriaController;
 import model.entity.Transacao;
 import model.entity.Conta;
 import model.entity.Categoria;
-import view.telas.utils.Renderers;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -42,6 +41,10 @@ public class TransacoesCard extends CardBase {
     private JButton btnEditar;
     private JButton btnExcluir;
     private JButton btnCancelar;
+    private JButton btnMarcarPago;
+    
+    // Abas
+    private JTabbedPane tabbedPane;
     
     private Transacao transacaoEditando;
     
@@ -58,8 +61,8 @@ public class TransacoesCard extends CardBase {
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         
-        // Abas
-        JTabbedPane tabbedPane = new JTabbedPane();
+        // Criar abas
+        tabbedPane = new JTabbedPane();
         
         // Aba 1: Cadastro
         JPanel panelCadastro = criarPanelCadastro();
@@ -112,7 +115,17 @@ public class TransacoesCard extends CardBase {
         
         String[] tipos = {"DESPESA", "RECEITA"};
         cmbTipo = new JComboBox<>(tipos);
-        cmbTipo.addActionListener(e -> atualizarCategoriasPorTipo());
+        cmbTipo.addActionListener(e -> {
+            atualizarCategoriasPorTipo();
+            // Se for RECEITA, marca automaticamente como pago
+            if ("RECEITA".equals(cmbTipo.getSelectedItem().toString())) {
+                chkPago.setSelected(true);
+                chkPago.setEnabled(false); // Desabilita para receitas
+            } else {
+                chkPago.setSelected(false);
+                chkPago.setEnabled(true); // Habilita para despesas
+            }
+        });
         gbc.gridx = 3;
         panel.add(cmbTipo, gbc);
         
@@ -156,6 +169,11 @@ public class TransacoesCard extends CardBase {
         gbc.gridx = 0;
         gbc.gridy = 4;
         chkPago = new JCheckBox("Pago");
+        // Receitas são automaticamente pagas
+        if ("RECEITA".equals(cmbTipo.getSelectedItem().toString())) {
+            chkPago.setSelected(true);
+            chkPago.setEnabled(false);
+        }
         panel.add(chkPago, gbc);
         
         gbc.gridx = 1;
@@ -217,8 +235,11 @@ public class TransacoesCard extends CardBase {
         tblTransacoes.setRowHeight(30);
         tblTransacoes.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tblTransacoes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        tblTransacoes.getColumnModel().getColumn(5).setCellRenderer(new Renderers.ValorCellRenderer());
-        tblTransacoes.getColumnModel().getColumn(6).setCellRenderer(new Renderers.StatusCellRenderer());
+        
+        // Renderers personalizados
+        tblTransacoes.getColumnModel().getColumn(5).setCellRenderer(new ValorCellRendererCustom());
+        tblTransacoes.getColumnModel().getColumn(6).setCellRenderer(new StatusCellRendererCustom());
+        tblTransacoes.getColumnModel().getColumn(7).setCellRenderer(new PagoCellRendererCustom());
         
         JScrollPane scrollPane = new JScrollPane(tblTransacoes);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -267,6 +288,14 @@ public class TransacoesCard extends CardBase {
         gbc.gridx = 5;
         panel.add(txtDataFim, gbc);
         
+        // Status Pagamento
+        gbc.gridx = 6;
+        panel.add(new JLabel("Status:"), gbc);
+        
+        JComboBox<String> cmbStatus = new JComboBox<>(new String[]{"TODOS", "PAGO", "PENDENTE"});
+        gbc.gridx = 7;
+        panel.add(cmbStatus, gbc);
+        
         // Botão Filtrar
         JButton btnFiltrar = criarBotao("Filtrar", new Color(70, 130, 180));
         btnFiltrar.addActionListener(e -> {
@@ -276,12 +305,13 @@ public class TransacoesCard extends CardBase {
                 LocalDate fim = LocalDate.parse(txtDataFim.getText(), 
                     DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                 String tipo = cmbFiltroTipo.getSelectedItem().toString();
-                filtrarTransacoes(inicio, fim, tipo);
+                String status = cmbStatus.getSelectedItem().toString();
+                filtrarTransacoes(inicio, fim, tipo, status);
             } catch (Exception ex) {
                 mostrarMensagemErro("Data inválida. Use o formato dd/MM/yyyy.");
             }
         });
-        gbc.gridx = 6;
+        gbc.gridx = 8;
         panel.add(btnFiltrar, gbc);
         
         return panel;
@@ -293,29 +323,34 @@ public class TransacoesCard extends CardBase {
         btnSalvar = criarBotao("Salvar", new Color(76, 175, 80));
         btnEditar = criarBotao("Editar", new Color(33, 150, 243));
         btnExcluir = criarBotao("Excluir", new Color(244, 67, 54));
+        btnMarcarPago = criarBotao("Marcar Pago", new Color(255, 193, 7));
         btnCancelar = criarBotao("Cancelar", new Color(158, 158, 158));
         
         // Tamanho
-        Dimension btnSize = new Dimension(100, 35);
+        Dimension btnSize = new Dimension(120, 35);
         btnSalvar.setPreferredSize(btnSize);
         btnEditar.setPreferredSize(btnSize);
         btnExcluir.setPreferredSize(btnSize);
+        btnMarcarPago.setPreferredSize(btnSize);
         btnCancelar.setPreferredSize(btnSize);
         
         panel.add(btnSalvar);
         panel.add(btnEditar);
         panel.add(btnExcluir);
+        panel.add(btnMarcarPago);
         panel.add(btnCancelar);
         
         // Ações dos botões
         btnSalvar.addActionListener(e -> salvarTransacao());
         btnEditar.addActionListener(e -> editarTransacao());
         btnExcluir.addActionListener(e -> excluirTransacao());
+        btnMarcarPago.addActionListener(e -> marcarComoPago());
         btnCancelar.addActionListener(e -> cancelar());
         
         // Estado inicial
         btnEditar.setEnabled(false);
         btnExcluir.setEnabled(false);
+        btnMarcarPago.setEnabled(false);
         
         return panel;
     }
@@ -346,20 +381,26 @@ public class TransacoesCard extends CardBase {
     public void carregarDados() {
         LocalDate inicio = LocalDate.now().withDayOfMonth(1);
         LocalDate fim = LocalDate.now();
-        filtrarTransacoes(inicio, fim, "TODOS");
+        filtrarTransacoes(inicio, fim, "TODOS", "TODOS");
     }
     
-    private void filtrarTransacoes(LocalDate inicio, LocalDate fim, String tipo) {
+    private void filtrarTransacoes(LocalDate inicio, LocalDate fim, String tipo, String status) {
         modelTransacoes.setRowCount(0);
         
-        List<Transacao> transacoes;
-        if ("TODOS".equals(tipo)) {
-            transacoes = transacaoController.listarTransacoesPeriodo(inicio, fim);
-        } else {
-            transacoes = transacaoController.listarTransacoesPeriodo(inicio, fim);
-            // Filtrar por tipo
+        List<Transacao> transacoes = transacaoController.listarTransacoesPeriodo(inicio, fim);
+        
+        // Filtrar por tipo
+        if (!"TODOS".equals(tipo)) {
             transacoes = transacoes.stream()
                 .filter(t -> t.getTipo().equals(tipo))
+                .toList();
+        }
+        
+        // Filtrar por status de pagamento
+        if (!"TODOS".equals(status)) {
+            boolean pago = "PAGO".equals(status);
+            transacoes = transacoes.stream()
+                .filter(t -> t.getPago() == pago)
                 .toList();
         }
         
@@ -441,12 +482,19 @@ public class TransacoesCard extends CardBase {
             Conta contaSelecionada = (Conta) cmbConta.getSelectedItem();
             Categoria categoriaSelecionada = (Categoria) cmbCategoria.getSelectedItem();
             
+            // Receitas são sempre consideradas pagas
+            boolean pago = chkPago.isSelected();
+            String tipo = cmbTipo.getSelectedItem().toString();
+            if ("RECEITA".equals(tipo)) {
+                pago = true; // Força receitas como pagas
+            }
+            
             if (transacaoEditando == null) {
                 // Nova transação
                 boolean sucesso = transacaoController.registrarTransacao(
                     txtDescricao.getText().trim(),
                     valor,
-                    cmbTipo.getSelectedItem().toString(),
+                    tipo,
                     dataTransacao,
                     contaSelecionada.getId(),
                     categoriaSelecionada.getId(),
@@ -454,6 +502,17 @@ public class TransacoesCard extends CardBase {
                 );
                 
                 if (sucesso) {
+                    // Se for despesa e marcada como paga, aplicar o pagamento
+                    if ("DESPESA".equals(tipo) && pago) {
+                        // Obter ID da transação recém-criada
+                        List<Transacao> ultimas = transacaoController.listarTransacoesPeriodo(
+                            dataTransacao, dataTransacao);
+                        if (!ultimas.isEmpty()) {
+                            Transacao ultima = ultimas.get(ultimas.size() - 1); // Última transação
+                            transacaoController.marcarComoPago(ultima.getId());
+                        }
+                    }
+                    
                     mostrarMensagemSucesso("Transação registrada com sucesso!");
                     limparFormulario();
                     carregarDados();
@@ -472,6 +531,15 @@ public class TransacoesCard extends CardBase {
                     categoriaSelecionada.getId(),
                     txtObservacoes.getText().trim()
                 );
+                
+                // Atualizar status de pagamento se mudou
+                if (sucesso && pago != transacaoEditando.getPago()) {
+                    if (pago) {
+                        transacaoController.marcarComoPago(transacaoEditando.getId());
+                    } else {
+                        desmarcarComoPago(transacaoEditando.getId());
+                    }
+                }
                 
                 if (sucesso) {
                     mostrarMensagemSucesso("Transação atualizada com sucesso!");
@@ -499,6 +567,15 @@ public class TransacoesCard extends CardBase {
                 txtValor.setText(transacaoEditando.getValor().toString());
                 cmbTipo.setSelectedItem(transacaoEditando.getTipo());
                 
+                // Configurar checkbox Pago baseado no tipo
+                if ("RECEITA".equals(transacaoEditando.getTipo())) {
+                    chkPago.setSelected(true);
+                    chkPago.setEnabled(false);
+                } else {
+                    chkPago.setSelected(transacaoEditando.getPago());
+                    chkPago.setEnabled(true);
+                }
+                
                 // Selecionar conta
                 for (int i = 0; i < cmbConta.getItemCount(); i++) {
                     Conta conta = cmbConta.getItemAt(i);
@@ -523,7 +600,6 @@ public class TransacoesCard extends CardBase {
                 txtDataVencimento.setText(transacaoEditando.getDataVencimento()
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
                 txtObservacoes.setText(transacaoEditando.getObservacoes());
-                chkPago.setSelected(transacaoEditando.getPago());
                 chkRecorrente.setSelected(transacaoEditando.getRecorrente());
                 
                 if (transacaoEditando.getRecorrente()) {
@@ -533,7 +609,7 @@ public class TransacoesCard extends CardBase {
                 btnSalvar.setText("Atualizar");
                 
                 // Mudar para a aba de cadastro
-                ((JTabbedPane) getParent().getParent()).setSelectedIndex(0);
+                tabbedPane.setSelectedIndex(0);
             }
         }
     }
@@ -557,6 +633,96 @@ public class TransacoesCard extends CardBase {
         }
     }
     
+    private void marcarComoPago() {
+        int linha = tblTransacoes.getSelectedRow();
+        if (linha >= 0) {
+            Integer id = (Integer) modelTransacoes.getValueAt(linha, 0);
+            String descricao = (String) modelTransacoes.getValueAt(linha, 2);
+            String tipo = (String) modelTransacoes.getValueAt(linha, 6);
+            boolean estaPago = "Sim".equals(modelTransacoes.getValueAt(linha, 7));
+            
+            // Se já estiver pago, perguntar se deseja desmarcar
+            if (estaPago) {
+                if (confirmarAcao("A transação '" + descricao + "' já está marcada como paga. Deseja desmarcar?")) {
+                    boolean sucesso = desmarcarComoPago(id);
+                    if (sucesso) {
+                        mostrarMensagemSucesso("Transação desmarcada como não paga!");
+                        carregarDados();
+                        if (updateCallback != null) {
+                            updateCallback.onUpdate();
+                        }
+                    } else {
+                        mostrarMensagemErro("Erro ao desmarcar transação.");
+                    }
+                }
+            } else {
+                // Marcar como pago
+                if (confirmarAcao("Deseja marcar a transação '" + descricao + "' como paga?")) {
+                    boolean sucesso = transacaoController.marcarComoPago(id);
+                    if (sucesso) {
+                        mostrarMensagemSucesso("Transação marcada como paga!");
+                        carregarDados();
+                        if (updateCallback != null) {
+                            updateCallback.onUpdate();
+                        }
+                    } else {
+                        mostrarMensagemErro("Erro ao marcar transação como paga.");
+                    }
+                }
+            }
+        }
+    }
+    
+    private boolean desmarcarComoPago(Integer id) {
+        try {
+            // Buscar a transação
+            Transacao transacao = transacaoController.buscarTransacaoPorId(id);
+            if (transacao == null) {
+                mostrarMensagemErro("Transação não encontrada.");
+                return false;
+            }
+            
+            // Verificar se o usuário tem permissão
+            if (!transacao.getUsuarioId().equals(usuarioId)) {
+                mostrarMensagemErro("Você não tem permissão para alterar esta transação.");
+                return false;
+            }
+            
+            // Atualizar no banco de dados
+            // Usaremos o método atualizarTransacao para isso
+            boolean sucesso = transacaoController.atualizarTransacao(
+                id,
+                transacao.getDescricao(),
+                transacao.getValor(),
+                transacao.getDataTransacao(),
+                transacao.getContaId(),
+                transacao.getCategoriaId(),
+                transacao.getObservacoes()
+            );
+            
+            // Se for despesa e estava paga, reverter o saldo
+            if (sucesso && "DESPESA".equals(transacao.getTipo()) && transacao.getPago()) {
+                // Para reverter o saldo, precisamos de um método específico
+                // Por enquanto, vamos usar uma abordagem alternativa:
+                // Criar uma transação reversa temporária
+                transacaoController.registrarTransacao(
+                    "[REVERSÃO] " + transacao.getDescricao(),
+                    transacao.getValor(),
+                    "RECEITA", // Reverte a despesa
+                    LocalDate.now(),
+                    transacao.getContaId(),
+                    transacao.getCategoriaId(),
+                    "Reversão de transação desmarcada como paga"
+                );
+            }
+            
+            return sucesso;
+        } catch (Exception e) {
+            mostrarMensagemErro("Erro ao desmarcar como pago: " + e.getMessage());
+            return false;
+        }
+    }
+    
     private void cancelar() {
         limparFormulario();
     }
@@ -569,6 +735,7 @@ public class TransacoesCard extends CardBase {
         txtDataVencimento.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         txtObservacoes.setText("");
         chkPago.setSelected(false);
+        chkPago.setEnabled(true); // Reabilitar por padrão
         chkRecorrente.setSelected(false);
         cmbFrequencia.setEnabled(false);
         transacaoEditando = null;
@@ -583,6 +750,37 @@ public class TransacoesCard extends CardBase {
         
         btnEditar.setEnabled(habilitar);
         btnExcluir.setEnabled(habilitar);
+        btnMarcarPago.setEnabled(habilitar);
+    }
+    
+    @Override
+    protected void mostrarMensagemSucesso(String mensagem) {
+        JOptionPane.showMessageDialog(this, mensagem, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    @Override
+    protected void mostrarMensagemErro(String mensagem) {
+        JOptionPane.showMessageDialog(this, mensagem, "Erro", JOptionPane.ERROR_MESSAGE);
+    }
+    
+    @Override
+    protected boolean confirmarAcao(String mensagem) {
+        int resposta = JOptionPane.showConfirmDialog(this, mensagem, "Confirmação", 
+            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        return resposta == JOptionPane.YES_OPTION;
+    }
+    
+    @Override
+    protected JButton criarBotao(String texto, Color cor) {
+        JButton botao = super.criarBotao(texto, cor);
+        botao.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        return botao;
+    }
+    
+    protected JPanel criarPainelBotoes() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        panel.setBackground(new Color(245, 245, 245));
+        return panel;
     }
     
     public void recarregarCategorias() {
@@ -590,13 +788,89 @@ public class TransacoesCard extends CardBase {
     }
     
     public void mostrarAbaCadastro() {
-        // Encontrar o JTabbedPane
-        Component parent = getParent();
-        while (parent != null && !(parent instanceof JTabbedPane)) {
-            parent = parent.getParent();
+        tabbedPane.setSelectedIndex(0);
+    }
+    
+    // Classes internas para renderers
+    private class ValorCellRendererCustom extends javax.swing.table.DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            
+            if (value instanceof BigDecimal) {
+                BigDecimal valor = (BigDecimal) value;
+                setText(String.format("R$ %,.2f", valor));
+                
+                // Verificar se é despesa ou receita
+                try {
+                    String tipo = (String) table.getValueAt(row, 6); // Coluna Status (índice 6)
+                    if ("DESPESA".equals(tipo)) {
+                        setForeground(new Color(229, 57, 53));
+                    } else if ("RECEITA".equals(tipo)) {
+                        setForeground(new Color(46, 125, 50));
+                    }
+                } catch (Exception e) {
+                    // Se não conseguir determinar o tipo, usa cor padrão
+                }
+                
+                setHorizontalAlignment(SwingConstants.RIGHT);
+            }
+            
+            return c;
         }
-        if (parent instanceof JTabbedPane) {
-            ((JTabbedPane) parent).setSelectedIndex(0);
+    }
+    
+    private class StatusCellRendererCustom extends javax.swing.table.DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            JLabel label = (JLabel) super.getTableCellRendererComponent(
+                table, value, isSelected, hasFocus, row, column);
+            
+            if (value instanceof String) {
+                String status = (String) value;
+                
+                if ("DESPESA".equals(status)) {
+                    label.setForeground(new Color(229, 57, 53));
+                    label.setText("Despesa");
+                } else if ("RECEITA".equals(status)) {
+                    label.setForeground(new Color(46, 125, 50));
+                    label.setText("Receita");
+                }
+            }
+            
+            return label;
         }
+    }
+    
+    // Classe para renderizar a coluna de status Pago
+    private class PagoCellRendererCustom extends javax.swing.table.DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            JLabel label = (JLabel) super.getTableCellRendererComponent(
+                table, value, isSelected, hasFocus, row, column);
+            
+            if (value instanceof String) {
+                String pago = (String) value;
+                
+                if ("Sim".equals(pago)) {
+                    label.setForeground(new Color(46, 125, 50));
+                    label.setText("✓ Pago");
+                } else {
+                    label.setForeground(new Color(158, 158, 158));
+                    label.setText("✗ Pendente");
+                }
+            }
+            
+            return label;
+        }
+    }
+    
+    // Método para atualizar a interface quando há mudanças
+    public void atualizarInterface() {
+        carregarCombos();
+        carregarDados();
     }
 }

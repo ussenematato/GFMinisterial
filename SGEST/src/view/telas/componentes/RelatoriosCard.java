@@ -3,32 +3,15 @@ package view.telas.componentes;
 import controller.TransacaoController;
 import controller.ContaController;
 import controller.CategoriaController;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.general.DefaultPieDataset;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumnModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.*;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.mysql.cj.result.Row;
-import com.toedter.calendar.JDateChooser;
+import view.telas.MenuPrincipal;
 
 public class RelatoriosCard extends CardBase {
     
@@ -39,31 +22,25 @@ public class RelatoriosCard extends CardBase {
     // Componentes da UI
     private JTabbedPane tabbedPane;
     private JComboBox<String> cbPeriodo;
-    private JComboBox<String> cbTipoRelatorio;
-    private JComboBox<String> cbCategoria;
-    private JComboBox<String> cbConta;
-    private JDateChooser dateInicio;
-    private JDateChooser dateFim;
+    private JTextField txtDataInicio;
+    private JTextField txtDataFim;
     private JButton btnFiltrar;
     private JButton btnLimparFiltros;
-    private JButton btnExportarPDF;
-    private JButton btnExportarExcel;
     
-    // Painéis de gráficos
-    private ChartPanel chartResumoPanel;
-    private ChartPanel chartCategoriaPanel;
-    private ChartPanel chartEvolucaoPanel;
-    
-    // Tabelas
+    // Tabela
     private JTable tabelaDetalhamento;
     private DefaultTableModel modeloTabela;
     
-    // Filtros atuais
+    // Labels para estatísticas
+    private JLabel lblPeriodo;
+    private JLabel lblTotalReceitas;
+    private JLabel lblTotalDespesas;
+    private JLabel lblSaldoPeriodo;
+    private JLabel lblSaldoTotal;
+    
+    // Filtros
     private LocalDate filtroInicio;
     private LocalDate filtroFim;
-    private String filtroTipo;
-    private String filtroCategoria;
-    private String filtroConta;
     
     public RelatoriosCard(Integer usuarioId, MenuPrincipal menuPrincipal) {
         super(usuarioId, menuPrincipal);
@@ -79,8 +56,6 @@ public class RelatoriosCard extends CardBase {
     @Override
     public void carregarDados() {
         aplicarFiltros();
-        atualizarGraficos();
-        atualizarTabelaDetalhamento();
     }
     
     private void initComponents() {
@@ -95,16 +70,10 @@ public class RelatoriosCard extends CardBase {
         // Criar as abas
         tabbedPane.addTab("Resumo Geral", criarPainelResumoGeral());
         tabbedPane.addTab("Despesas por Categoria", criarPainelDespesasCategoria());
-        tabbedPane.addTab("Evolução Mensal", criarPainelEvolucaoMensal());
-        tabbedPane.addTab("Detalhamento", criarPainelDetalhamento());
-        
-        // Painel de botões de exportação
-        JPanel panelExportacao = criarPainelExportacao();
         
         // Adicionar componentes ao card
         add(panelFiltros, BorderLayout.NORTH);
         add(tabbedPane, BorderLayout.CENTER);
-        add(panelExportacao, BorderLayout.SOUTH);
     }
     
     private JPanel criarPainelFiltros() {
@@ -128,46 +97,17 @@ public class RelatoriosCard extends CardBase {
         gbc.gridx = 2; gbc.gridy = 0;
         panel.add(new JLabel("De:"), gbc);
         
-        dateInicio = new JDateChooser();
-        dateInicio.setDateFormatString("dd/MM/yyyy");
+        txtDataInicio = new JTextField(10);
         gbc.gridx = 3; gbc.gridy = 0;
-        panel.add(dateInicio, gbc);
+        panel.add(txtDataInicio, gbc);
         
         // Data Fim
         gbc.gridx = 4; gbc.gridy = 0;
         panel.add(new JLabel("Até:"), gbc);
         
-        dateFim = new JDateChooser();
-        dateFim.setDateFormatString("dd/MM/yyyy");
+        txtDataFim = new JTextField(10);
         gbc.gridx = 5; gbc.gridy = 0;
-        panel.add(dateFim, gbc);
-        
-        // Tipo de Relatório
-        gbc.gridx = 0; gbc.gridy = 1;
-        panel.add(new JLabel("Tipo:"), gbc);
-        
-        String[] tipos = {"Todos", "Receitas", "Despesas", "Transferências"};
-        cbTipoRelatorio = new JComboBox<>(tipos);
-        gbc.gridx = 1; gbc.gridy = 1;
-        panel.add(cbTipoRelatorio, gbc);
-        
-        // Categoria
-        gbc.gridx = 2; gbc.gridy = 1;
-        panel.add(new JLabel("Categoria:"), gbc);
-        
-        cbCategoria = new JComboBox<>();
-        cbCategoria.addItem("Todas");
-        gbc.gridx = 3; gbc.gridy = 1;
-        panel.add(cbCategoria, gbc);
-        
-        // Conta
-        gbc.gridx = 4; gbc.gridy = 1;
-        panel.add(new JLabel("Conta:"), gbc);
-        
-        cbConta = new JComboBox<>();
-        cbConta.addItem("Todas");
-        gbc.gridx = 5; gbc.gridy = 1;
-        panel.add(cbConta, gbc);
+        panel.add(txtDataFim, gbc);
         
         // Botões
         JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
@@ -180,7 +120,7 @@ public class RelatoriosCard extends CardBase {
         panelBotoes.add(btnFiltrar);
         panelBotoes.add(btnLimparFiltros);
         
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0; gbc.gridy = 1;
         gbc.gridwidth = 6;
         panel.add(panelBotoes, gbc);
         
@@ -190,39 +130,51 @@ public class RelatoriosCard extends CardBase {
     private JPanel criarPainelResumoGeral() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         
-        // Painel do gráfico
-        JPanel panelGrafico = new JPanel(new BorderLayout());
-        panelGrafico.setBorder(BorderFactory.createTitledBorder("Distribuição Financeira"));
-        
-        // Gráfico será criado dinamicamente
-        chartResumoPanel = new ChartPanel(null);
-        chartResumoPanel.setPreferredSize(new Dimension(600, 400));
-        panelGrafico.add(chartResumoPanel, BorderLayout.CENTER);
-        
         // Painel de estatísticas
         JPanel panelStats = criarPainelEstatisticas();
         
-        panel.add(panelGrafico, BorderLayout.CENTER);
-        panel.add(panelStats, BorderLayout.EAST);
+        panel.add(panelStats, BorderLayout.CENTER);
         
         return panel;
     }
     
     private JPanel criarPainelEstatisticas() {
-        JPanel panel = new JPanel(new GridLayout(8, 1, 5, 5));
+        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("Estatísticas"));
-        panel.setPreferredSize(new Dimension(300, 400));
+        panel.setPreferredSize(new Dimension(500, 200));
         
-        // Os valores serão atualizados dinamicamente
-        String[] labels = {"Período:", "Total Receitas:", "Total Despesas:", "Saldo Período:", 
-                           "Média Diária:", "Maior Receita:", "Maior Despesa:", "Saldo Total:"};
+        // Criar labels
+        lblPeriodo = new JLabel("---");
+        lblTotalReceitas = new JLabel("---");
+        lblTotalDespesas = new JLabel("---");
+        lblSaldoPeriodo = new JLabel("---");
+        lblSaldoTotal = new JLabel("---");
         
-        for (String label : labels) {
-            JPanel linha = new JPanel(new BorderLayout());
-            linha.add(new JLabel(label), BorderLayout.WEST);
-            linha.add(new JLabel("---"), BorderLayout.CENTER);
-            panel.add(linha);
-        }
+        // Estilização
+        lblTotalReceitas.setForeground(new Color(0, 150, 0));
+        lblTotalReceitas.setFont(new Font("Arial", Font.BOLD, 12));
+        
+        lblTotalDespesas.setForeground(new Color(200, 0, 0));
+        lblTotalDespesas.setFont(new Font("Arial", Font.BOLD, 12));
+        
+        lblSaldoPeriodo.setFont(new Font("Arial", Font.BOLD, 14));
+        lblSaldoTotal.setFont(new Font("Arial", Font.BOLD, 14));
+        
+        // Adicionar labels ao painel
+        panel.add(new JLabel("Período:"));
+        panel.add(lblPeriodo);
+        
+        panel.add(new JLabel("Total Receitas:"));
+        panel.add(lblTotalReceitas);
+        
+        panel.add(new JLabel("Total Despesas:"));
+        panel.add(lblTotalDespesas);
+        
+        panel.add(new JLabel("Saldo Período:"));
+        panel.add(lblSaldoPeriodo);
+        
+        panel.add(new JLabel("Saldo Total:"));
+        panel.add(lblSaldoTotal);
         
         return panel;
     }
@@ -230,18 +182,11 @@ public class RelatoriosCard extends CardBase {
     private JPanel criarPainelDespesasCategoria() {
         JPanel panel = new JPanel(new BorderLayout());
         
-        // Gráfico
-        JPanel panelGrafico = new JPanel(new BorderLayout());
-        panelGrafico.setBorder(BorderFactory.createTitledBorder("Distribuição por Categoria"));
-        
-        chartCategoriaPanel = new ChartPanel(null);
-        panelGrafico.add(chartCategoriaPanel, BorderLayout.CENTER);
-        
         // Tabela
         JPanel panelTabela = new JPanel(new BorderLayout());
-        panelTabela.setBorder(BorderFactory.createTitledBorder("Detalhes por Categoria"));
+        panelTabela.setBorder(BorderFactory.createTitledBorder("Despesas por Categoria"));
         
-        String[] colunas = {"Categoria", "Valor (R$)", "Percentual", "Qtde Transações"};
+        String[] colunas = {"Categoria", "Valor (R$)", "Percentual"};
         modeloTabela = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -250,52 +195,11 @@ public class RelatoriosCard extends CardBase {
         };
         
         tabelaDetalhamento = new JTable(modeloTabela);
+        tabelaDetalhamento.setRowHeight(25);
         JScrollPane scrollPane = new JScrollPane(tabelaDetalhamento);
-        scrollPane.setPreferredSize(new Dimension(400, 300));
         panelTabela.add(scrollPane, BorderLayout.CENTER);
         
-        panel.add(panelGrafico, BorderLayout.CENTER);
-        panel.add(panelTabela, BorderLayout.EAST);
-        
-        return panel;
-    }
-    
-    private JPanel criarPainelEvolucaoMensal() {
-        JPanel panel = new JPanel(new BorderLayout());
-        
-        chartEvolucaoPanel = new ChartPanel(null);
-        chartEvolucaoPanel.setPreferredSize(new Dimension(800, 500));
-        
-        panel.add(chartEvolucaoPanel, BorderLayout.CENTER);
-        
-        return panel;
-    }
-    
-    private JPanel criarPainelDetalhamento() {
-        JPanel panel = new JPanel(new BorderLayout());
-        
-        JTextArea txtDetalhes = new JTextArea();
-        txtDetalhes.setEditable(false);
-        txtDetalhes.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        
-        JScrollPane scrollPane = new JScrollPane(txtDetalhes);
-        
-        panel.add(scrollPane, BorderLayout.CENTER);
-        
-        return panel;
-    }
-    
-    private JPanel criarPainelExportacao() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        
-        btnExportarPDF = criarBotao("Exportar PDF", new Color(220, 53, 69));
-        btnExportarExcel = criarBotao("Exportar Excel", new Color(40, 167, 69));
-        
-        btnExportarPDF.addActionListener(e -> exportarParaPDF());
-        btnExportarExcel.addActionListener(e -> exportarParaExcel());
-        
-        panel.add(btnExportarPDF);
-        panel.add(btnExportarExcel);
+        panel.add(panelTabela, BorderLayout.CENTER);
         
         return panel;
     }
@@ -303,349 +207,146 @@ public class RelatoriosCard extends CardBase {
     private void configurarFiltros() {
         // Configurar datas padrão (mês atual)
         YearMonth mesAtual = YearMonth.now();
-        dateInicio.setDate(java.sql.Date.valueOf(mesAtual.atDay(1)));
-        dateFim.setDate(java.sql.Date.valueOf(mesAtual.atEndOfMonth()));
-        
-        // Carregar categorias
-        List<String> categorias = categoriaController.listarNomesCategorias();
-        for (String categoria : categorias) {
-            cbCategoria.addItem(categoria);
-        }
-        
-        // Carregar contas
-        List<String> contas = contaController.listarNomesContas();
-        for (String conta : contas) {
-            cbConta.addItem(conta);
-        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        txtDataInicio.setText(mesAtual.atDay(1).format(formatter));
+        txtDataFim.setText(mesAtual.atEndOfMonth().format(formatter));
     }
     
     private void atualizarPeriodo() {
         String periodo = (String) cbPeriodo.getSelectedItem();
         LocalDate hoje = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         
         switch (periodo) {
             case "Mês Atual":
                 YearMonth mesAtual = YearMonth.now();
-                dateInicio.setDate(java.sql.Date.valueOf(mesAtual.atDay(1)));
-                dateFim.setDate(java.sql.Date.valueOf(mesAtual.atEndOfMonth()));
+                txtDataInicio.setText(mesAtual.atDay(1).format(formatter));
+                txtDataFim.setText(mesAtual.atEndOfMonth().format(formatter));
                 break;
                 
             case "Mês Anterior":
                 YearMonth mesAnterior = YearMonth.now().minusMonths(1);
-                dateInicio.setDate(java.sql.Date.valueOf(mesAnterior.atDay(1)));
-                dateFim.setDate(java.sql.Date.valueOf(mesAnterior.atEndOfMonth()));
+                txtDataInicio.setText(mesAnterior.atDay(1).format(formatter));
+                txtDataFim.setText(mesAnterior.atEndOfMonth().format(formatter));
                 break;
                 
             case "Últimos 3 Meses":
-                dateInicio.setDate(java.sql.Date.valueOf(hoje.minusMonths(3).withDayOfMonth(1)));
-                dateFim.setDate(java.sql.Date.valueOf(hoje));
+                txtDataInicio.setText(hoje.minusMonths(3).withDayOfMonth(1).format(formatter));
+                txtDataFim.setText(hoje.format(formatter));
                 break;
                 
             case "Últimos 6 Meses":
-                dateInicio.setDate(java.sql.Date.valueOf(hoje.minusMonths(6).withDayOfMonth(1)));
-                dateFim.setDate(java.sql.Date.valueOf(hoje));
+                txtDataInicio.setText(hoje.minusMonths(6).withDayOfMonth(1).format(formatter));
+                txtDataFim.setText(hoje.format(formatter));
                 break;
                 
             case "Ano Atual":
-                dateInicio.setDate(java.sql.Date.valueOf(LocalDate.of(hoje.getYear(), 1, 1)));
-                dateFim.setDate(java.sql.Date.valueOf(hoje));
+                txtDataInicio.setText(LocalDate.of(hoje.getYear(), 1, 1).format(formatter));
+                txtDataFim.setText(hoje.format(formatter));
                 break;
                 
             case "Personalizado":
-                // Mantém as datas selecionadas
+                // Mantém as datas digitadas
                 break;
         }
     }
     
     private void aplicarFiltros() {
-        // Capturar valores dos filtros
-        filtroInicio = ((java.sql.Date) dateInicio.getDate()).toLocalDate();
-        filtroFim = ((java.sql.Date) dateFim.getDate()).toLocalDate();
-        filtroTipo = (String) cbTipoRelatorio.getSelectedItem();
-        filtroCategoria = (String) cbCategoria.getSelectedItem();
-        filtroConta = (String) cbConta.getSelectedItem();
-        
-        // Atualizar dados
-        atualizarGraficos();
-        atualizarTabelaDetalhamento();
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            filtroInicio = LocalDate.parse(txtDataInicio.getText(), formatter);
+            filtroFim = LocalDate.parse(txtDataFim.getText(), formatter);
+            
+            if (filtroInicio.isAfter(filtroFim)) {
+                mostrarMensagemErro("Data início não pode ser após data fim!");
+                return;
+            }
+            
+            atualizarEstatisticas();
+            atualizarTabelaDetalhamento();
+            
+        } catch (Exception e) {
+            mostrarMensagemErro("Formato de data inválido! Use DD/MM/AAAA");
+        }
     }
     
     private void limparFiltros() {
         cbPeriodo.setSelectedIndex(0); // Mês Atual
-        cbTipoRelatorio.setSelectedIndex(0); // Todos
-        cbCategoria.setSelectedIndex(0); // Todas
-        cbConta.setSelectedIndex(0); // Todas
-        
         atualizarPeriodo();
         aplicarFiltros();
     }
     
-    private void atualizarGraficos() {
-        // Atualizar gráfico de resumo
-        atualizarGraficoResumo();
-        
-        // Atualizar gráfico de categorias
-        atualizarGraficoCategorias();
-        
-        // Atualizar gráfico de evolução
-        atualizarGraficoEvolucao();
-    }
-    
-    private void atualizarGraficoResumo() {
-        BigDecimal receitas = transacaoController.obterTotalReceitas(filtroInicio, filtroFim);
-        BigDecimal despesas = transacaoController.obterTotalDespesas(filtroInicio, filtroFim);
-        
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        if (receitas.compareTo(BigDecimal.ZERO) > 0) {
-            dataset.setValue("Receitas", receitas.doubleValue());
-        }
-        if (despesas.compareTo(BigDecimal.ZERO) > 0) {
-            dataset.setValue("Despesas", despesas.doubleValue());
-        }
-        
-        JFreeChart chart = ChartFactory.createPieChart(
-            "Distribuição Financeira",
-            dataset,
-            true, true, false
-        );
-        
-        if (chartResumoPanel != null) {
-            chartResumoPanel.setChart(chart);
-        }
-    }
-    
-    private void atualizarGraficoCategorias() {
-        List<Object[]> dados = transacaoController.obterDespesasPorCategoria(filtroInicio, filtroFim);
-        
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        for (Object[] linha : dados) {
-            String categoria = (String) linha[0];
-            Double valor = (Double) linha[1];
-            if (valor > 0) {
-                dataset.setValue(categoria, valor);
+    private void atualizarEstatisticas() {
+        try {
+            // Formatar período
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            lblPeriodo.setText(filtroInicio.format(formatter) + " a " + filtroFim.format(formatter));
+            
+            // Obter dados do período
+            BigDecimal receitas = transacaoController.obterTotalReceitas(filtroInicio, filtroFim);
+            BigDecimal despesas = transacaoController.obterTotalDespesas(filtroInicio, filtroFim);
+            BigDecimal saldoPeriodo = receitas.subtract(despesas);
+            BigDecimal saldoTotal = contaController.obterSaldoTotal();
+            
+            // Atualizar labels
+            lblTotalReceitas.setText(String.format("R$ %,.2f", receitas));
+            lblTotalDespesas.setText(String.format("R$ %,.2f", despesas));
+            lblSaldoPeriodo.setText(String.format("R$ %,.2f", saldoPeriodo));
+            lblSaldoTotal.setText(String.format("R$ %,.2f", saldoTotal));
+            
+            // Colorir saldo do período
+            if (saldoPeriodo.compareTo(BigDecimal.ZERO) >= 0) {
+                lblSaldoPeriodo.setForeground(new Color(0, 150, 0));
+            } else {
+                lblSaldoPeriodo.setForeground(new Color(200, 0, 0));
             }
-        }
-        
-        JFreeChart chart = ChartFactory.createPieChart(
-            "Despesas por Categoria",
-            dataset,
-            true, true, false
-        );
-        
-        if (chartCategoriaPanel != null) {
-            chartCategoriaPanel.setChart(chart);
-        }
-    }
-    
-    private void atualizarGraficoEvolucao() {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        
-        // Últimos 6 meses dentro do período filtrado
-        LocalDate inicio = filtroInicio;
-        LocalDate fim = filtroFim;
-        
-        // Calcular intervalos mensais
-        List<YearMonth> meses = new ArrayList<>();
-        YearMonth mesAtual = YearMonth.from(inicio);
-        YearMonth mesFim = YearMonth.from(fim);
-        
-        while (!mesAtual.isAfter(mesFim)) {
-            meses.add(mesAtual);
-            mesAtual = mesAtual.plusMonths(1);
-        }
-        
-        // Limitar a 12 meses para melhor visualização
-        if (meses.size() > 12) {
-            meses = meses.subList(meses.size() - 12, meses.size());
-        }
-        
-        for (YearMonth mes : meses) {
-            LocalDate mesInicio = mes.atDay(1);
-            LocalDate mesFimCalculado = mes.atEndOfMonth();
             
-            // Ajustar para o período filtrado
-            if (mesInicio.isBefore(inicio)) mesInicio = inicio;
-            if (mesFimCalculado.isAfter(fim)) mesFimCalculado = fim;
+            // Colorir saldo total
+            if (saldoTotal.compareTo(BigDecimal.ZERO) >= 0) {
+                lblSaldoTotal.setForeground(new Color(0, 150, 0));
+            } else {
+                lblSaldoTotal.setForeground(new Color(200, 0, 0));
+            }
             
-            BigDecimal receitas = transacaoController.obterTotalReceitas(mesInicio, mesFimCalculado);
-            BigDecimal despesas = transacaoController.obterTotalDespesas(mesInicio, mesFimCalculado);
-            
-            dataset.addValue(receitas, "Receitas", mes.format(DateTimeFormatter.ofPattern("MM/yy")));
-            dataset.addValue(despesas, "Despesas", mes.format(DateTimeFormatter.ofPattern("MM/yy")));
-        }
-        
-        JFreeChart chart = ChartFactory.createLineChart(
-            "Evolução Financeira",
-            "Mês",
-            "Valor (R$)",
-            dataset
-        );
-        
-        if (chartEvolucaoPanel != null) {
-            chartEvolucaoPanel.setChart(chart);
+        } catch (Exception e) {
+            mostrarMensagemErro("Erro ao carregar estatísticas: " + e.getMessage());
         }
     }
     
     private void atualizarTabelaDetalhamento() {
-        modeloTabela.setRowCount(0);
-        
-        List<Object[]> dados = transacaoController.obterDespesasPorCategoria(filtroInicio, filtroFim);
-        double total = dados.stream().mapToDouble(d -> (Double) d[1]).sum();
-        
-        for (Object[] linha : dados) {
-            String categoria = (String) linha[0];
-            Double valor = (Double) linha[1];
-            Long quantidade = (Long) linha[2];
-            Double percentual = total > 0 ? (valor / total) * 100 : 0;
+        try {
+            modeloTabela.setRowCount(0);
             
-            Object[] linhaTabela = {
-                categoria,
-                String.format("R$ %,.2f", valor),
-                String.format("%.1f%%", percentual),
-                quantidade
-            };
-            modeloTabela.addRow(linhaTabela);
-        }
-    }
-    
-    private void exportarParaPDF() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Salvar Relatório PDF");
-        fileChooser.setSelectedFile(new File("relatorio_financeiro_" + 
-            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".pdf"));
-        
-        int userSelection = fileChooser.showSaveDialog(this);
-        
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File fileToSave = fileChooser.getSelectedFile();
+            List<Object[]> dados = transacaoController.obterDespesasPorCategoria(filtroInicio, filtroFim);
             
-            try {
-                Document document = new Document();
-                PdfWriter.getInstance(document, new FileOutputStream(fileToSave));
-                document.open();
-                
-                // Título
-                var titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
-                Paragraph title = new Paragraph("Relatório Financeiro", titleFont);
-                title.setAlignment(Element.ALIGN_CENTER);
-                document.add(title);
-                
-                // Período
-                var normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
-                Paragraph periodo = new Paragraph(
-                    "Período: " + filtroInicio.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + 
-                    " a " + filtroFim.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), 
-                    normalFont
-                );
-                document.add(periodo);
-                
-                document.add(new Paragraph(" "));
-                
-                // Tabela de resumo
-                PdfPTable table = new PdfPTable(4);
-                table.setWidthPercentage(100);
-                
-                // Cabeçalho
-                table.addCell(new PdfPCell(new Phrase("Categoria", normalFont)));
-                table.addCell(new PdfPCell(new Phrase("Valor (R$)", normalFont)));
-                table.addCell(new PdfPCell(new Phrase("Percentual", normalFont)));
-                table.addCell(new PdfPCell(new Phrase("Qtde Transações", normalFont)));
-                
-                // Dados
-                List<Object[]> dados = transacaoController.obterDespesasPorCategoria(filtroInicio, filtroFim);
-                double total = dados.stream().mapToDouble(d -> (Double) d[1]).sum();
-                
-                for (Object[] linha : dados) {
-                    String categoria = (String) linha[0];
-                    Double valor = (Double) linha[1];
-                    Long quantidade = (Long) linha[2];
-                    Double percentual = total > 0 ? (valor / total) * 100 : 0;
-                    
-                    table.addCell(categoria);
-                    table.addCell(String.format("R$ %,.2f", valor));
-                    table.addCell(String.format("%.1f%%", percentual));
-                    table.addCell(quantidade.toString());
-                }
-                
-                document.add(table);
-                document.close();
-                
-                mostrarMensagemSucesso("Relatório PDF exportado com sucesso!");
-                
-            } catch (Exception e) {
-                mostrarMensagemErro("Erro ao exportar PDF: " + e.getMessage());
+            if (dados.isEmpty()) {
+                mostrarMensagemSucesso("Nenhuma despesa encontrada no período selecionado.");
+                return;
             }
-        }
-    }
-    
-    private void exportarParaExcel() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Salvar Relatório Excel");
-        fileChooser.setSelectedFile(new File("relatorio_financeiro_" + 
-            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx"));
-        
-        int userSelection = fileChooser.showSaveDialog(this);
-        
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File fileToSave = fileChooser.getSelectedFile();
             
-            try (Workbook workbook = new XSSFWorkbook()) {
-                Sheet sheet = workbook.createSheet("Relatório Financeiro");
-                
-                // Cabeçalho
-                Row headerRow = sheet.createRow(0);
-                String[] headers = {"Categoria", "Valor (R$)", "Percentual", "Qtde Transações", "Período"};
-                
-                CellStyle headerStyle = workbook.createCellStyle();
-                Font headerFont = workbook.createFont();
-                headerFont.setBold(true);
-                headerStyle.setFont(headerFont);
-                
-                for (int i = 0; i < headers.length; i++) {
-                    Cell cell = headerRow.createCell(i);
-                    cell.setCellValue(headers[i]);
-                    cell.setCellStyle(headerStyle);
-                }
-                
-                // Dados
-                List<Object[]> dados = transacaoController.obterDespesasPorCategoria(filtroInicio, filtroFim);
-                double total = dados.stream().mapToDouble(d -> (Double) d[1]).sum();
-                
-                int rowNum = 1;
-                for (Object[] linha : dados) {
-                    Row row = sheet.createRow(rowNum++);
-                    
-                    String categoria = (String) linha[0];
-                    Double valor = (Double) linha[1];
-                    Long quantidade = (Long) linha[2];
-                    Double percentual = total > 0 ? (valor / total) * 100 : 0;
-                    
-                    row.createCell(0).setCellValue(categoria);
-                    row.createCell(1).setCellValue(valor);
-                    row.createCell(2).setCellValue(percentual);
-                    row.createCell(3).setCellValue(quantidade);
-                    row.createCell(4).setCellValue(
-                        filtroInicio.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + 
-                        " a " + 
-                        filtroFim.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                    );
-                }
-                
-                // Auto-size columns
-                for (int i = 0; i < headers.length; i++) {
-                    sheet.autoSizeColumn(i);
-                }
-                
-                // Salvar arquivo
-                try (FileOutputStream fileOut = new FileOutputStream(fileToSave)) {
-                    workbook.write(fileOut);
-                }
-                
-                mostrarMensagemSucesso("Relatório Excel exportado com sucesso!");
-                
-            } catch (Exception e) {
-                mostrarMensagemErro("Erro ao exportar Excel: " + e.getMessage());
+            // Calcular total
+            double total = 0;
+            for (Object[] linha : dados) {
+                Double valor = (Double) linha[1];
+                total += valor;
             }
+            
+            // Adicionar dados à tabela
+            for (Object[] linha : dados) {
+                String categoria = (String) linha[0];
+                Double valor = (Double) linha[1];
+                Double percentual = total > 0 ? (valor / total) * 100 : 0;
+                
+                Object[] linhaTabela = {
+                    categoria,
+                    String.format("R$ %,.2f", valor),
+                    String.format("%.1f%%", percentual)
+                };
+                modeloTabela.addRow(linhaTabela);
+            }
+            
+        } catch (Exception e) {
+            mostrarMensagemErro("Erro ao carregar despesas por categoria: " + e.getMessage());
         }
     }
 }

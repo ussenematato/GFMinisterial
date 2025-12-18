@@ -83,6 +83,15 @@ public class CategoriaController {
         return listarCategorias("RECEITA");
     }
     
+    public List<String> listarNomesCategorias() {
+        try {
+            return categoriaDAO.listarNomesPorUsuario(usuarioLogadoId);
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar nomes de categorias: " + e.getMessage());
+            return List.of();
+        }
+    }
+    
     public Categoria buscarCategoriaPorId(Integer id) {
         try {
             Categoria categoria = categoriaDAO.buscarPorId(id);
