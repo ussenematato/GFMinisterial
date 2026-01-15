@@ -6,6 +6,7 @@ import controller.CategoriaController;
 import model.entity.Transacao;
 import model.entity.Conta;
 import model.entity.Categoria;
+import util.CurrencyUtils;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -594,7 +595,7 @@ public class TransacaoView extends JDialog {
             
             if (value instanceof BigDecimal) {
                 BigDecimal valor = (BigDecimal) value;
-                setText(String.format("R$ %,.2f", valor));
+                setText(CurrencyUtils.formatCurrency(valor));
                 
                 // Verificar se é despesa ou receita
                 String tipo = (String) table.getValueAt(row, 6);

@@ -272,4 +272,32 @@ public class TransacaoDAO {
 
         return transacao;
     }
+
+    // NOVO: Obter receitas por categoria
+    public List<Object[]> obterReceitasPorCategoria(Integer usuarioId, LocalDate inicio, LocalDate fim) throws SQLException {
+        List<Object[]> resultados = new ArrayList<>();
+        String sql = "SELECT cat.nome, SUM(t.valor) as total "
+                + "FROM transacoes t "
+                + "LEFT JOIN categorias cat ON t.categoria_id = cat.id "
+                + "WHERE t.usuario_id = ? AND t.tipo = 'RECEITA' "
+                + "AND t.data_transacao >= ? AND t.data_transacao <= ? "
+                + "GROUP BY cat.nome "
+                + "ORDER BY total DESC";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, usuarioId);
+            stmt.setDate(2, Date.valueOf(inicio));
+            stmt.setDate(3, Date.valueOf(fim));
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Object[] linha = new Object[2];
+                String nomeCategoria = rs.getString("nome");
+                linha[0] = nomeCategoria != null ? nomeCategoria : "Sem Categoria";
+                linha[1] = rs.getDouble("total");
+                resultados.add(linha);
+            }
+        }
+        return resultados;
+    }
 }

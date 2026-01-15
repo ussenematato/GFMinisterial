@@ -73,19 +73,19 @@ public class DashboardCard extends CardBase {
         panel.setBackground(new Color(245, 245, 245));
         
         // Card Saldo Total
-        JPanel cardSaldoTotal = criarCardResumo("Saldo Total", "R$ 0,00", new Color(46, 125, 50));
+        JPanel cardSaldoTotal = criarCardResumo("Saldo Total", "MT 0,00", new Color(46, 125, 50));
         lblSaldoTotal = (JLabel) ((JPanel) cardSaldoTotal.getComponent(1)).getComponent(0);
         
         // Card Receitas Mês
-        JPanel cardReceitasMes = criarCardResumo("Receitas do Mês", "R$ 0,00", new Color(30, 136, 229));
+        JPanel cardReceitasMes = criarCardResumo("Receitas do Mês", "MT 0,00", new Color(30, 136, 229));
         lblReceitasMes = (JLabel) ((JPanel) cardReceitasMes.getComponent(1)).getComponent(0);
         
         // Card Despesas Mês
-        JPanel cardDespesasMes = criarCardResumo("Despesas do Mês", "R$ 0,00", new Color(229, 57, 53));
+        JPanel cardDespesasMes = criarCardResumo("Despesas do Mês", "MT 0,00", new Color(229, 57, 53));
         lblDespesasMes = (JLabel) ((JPanel) cardDespesasMes.getComponent(1)).getComponent(0);
         
         // Card Saldo Mês
-        JPanel cardSaldoMes = criarCardResumo("Saldo do Mês", "R$ 0,00", new Color(121, 85, 72));
+        JPanel cardSaldoMes = criarCardResumo("Saldo do Mês", "MT 0,00", new Color(121, 85, 72));
         lblSaldoMes = (JLabel) ((JPanel) cardSaldoMes.getComponent(1)).getComponent(0);
         
         // Adicionar cards ao painel
@@ -189,7 +189,7 @@ public class DashboardCard extends CardBase {
             
             if (value instanceof BigDecimal) {
                 BigDecimal saldo = (BigDecimal) value;
-                setText(String.format("R$ %,.2f", saldo));
+                setText(String.format("MT %,.2f", saldo));
                 
                 if (saldo.compareTo(BigDecimal.ZERO) >= 0) {
                     setForeground(new Color(46, 125, 50));
@@ -267,7 +267,7 @@ public class DashboardCard extends CardBase {
             
             if (value instanceof BigDecimal) {
                 BigDecimal valor = (BigDecimal) value;
-                setText(String.format("R$ %,.2f", valor));
+                setText(String.format("MT %,.2f", valor));
                 
                 // Determinar cor baseado no tipo (despesa ou receita)
                 try {
@@ -395,7 +395,7 @@ public class DashboardCard extends CardBase {
     }
     
     private String formatarMoeda(BigDecimal valor) {
-        return String.format("R$ %,.2f", valor);
+        return String.format("MT %,.2f", valor);
     }
     
     private String formatarTipoConta(String tipo) {

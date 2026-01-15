@@ -108,6 +108,6 @@ public class Conta {
     // Métodos utilitários
     @Override
     public String toString() {
-        return nome + " (" + tipo + ") - R$ " + String.format("%.2f", saldoAtual);
+        return nome + " (" + tipo + ") - MT " + String.format("%.2f", saldoAtual);
     }
 }

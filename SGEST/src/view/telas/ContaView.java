@@ -343,7 +343,7 @@ public class ContaView extends JDialog {
             
             if (value instanceof BigDecimal) {
                 BigDecimal saldo = (BigDecimal) value;
-                setText(String.format("R$ %,.2f", saldo));
+                setText(String.format("MT %,.2f", saldo));
                 
                 if (saldo.compareTo(BigDecimal.ZERO) >= 0) {
                     setForeground(new Color(0, 100, 0));

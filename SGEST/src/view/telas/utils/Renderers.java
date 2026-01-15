@@ -2,6 +2,7 @@ package view.telas.utils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
+import util.CurrencyUtils;
 import java.awt.*;
 import java.math.BigDecimal;
 
@@ -15,7 +16,7 @@ public class Renderers {
             
             if (value instanceof BigDecimal) {
                 BigDecimal saldo = (BigDecimal) value;
-                setText(String.format("R$ %,.2f", saldo));
+                setText(CurrencyUtils.formatCurrency(saldo));
                 
                 if (saldo.compareTo(BigDecimal.ZERO) >= 0) {
                     setForeground(new Color(46, 125, 50));
@@ -38,7 +39,7 @@ public class Renderers {
             
             if (value instanceof BigDecimal) {
                 BigDecimal valor = (BigDecimal) value;
-                setText(String.format("R$ %,.2f", valor));
+                setText(CurrencyUtils.formatCurrency(valor));
                 
                 // Verificar se é despesa ou receita (baseado na coluna tipo)
                 try {

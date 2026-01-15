@@ -188,6 +188,6 @@ public class Transacao {
     // Métodos utilitários
     @Override
     public String toString() {
-        return descricao + " - R$ " + String.format("%.2f", valor) + " (" + tipo + ")";
+        return descricao + " - MT " + String.format("%.2f", valor) + " (" + tipo + ")";
     }
 }

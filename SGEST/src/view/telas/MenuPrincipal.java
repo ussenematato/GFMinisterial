@@ -1,6 +1,7 @@
 package view.telas;
 
 import view.telas.componentes.*;
+import util.UIStyler;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -27,22 +28,24 @@ public class MenuPrincipal extends JFrame {
     public MenuPrincipal(Integer usuarioId) {
         this.usuarioId = usuarioId;
         initComponents();
-        setupMenu();
+        // setupMenu(); // Removido: usando painel de navegação ao invés de menu bar
         setupCards();
         setupKeyboardShortcuts();
     }
     
     private void initComponents() {
-        setTitle("Sistema de Gestão Financeira");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Menu Principal - Gestão Financeira Ministerial");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setPreferredSize(new Dimension(1200, 700));
         
         // Configurar layout principal
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10, 10));
+        getContentPane().setBackground(new java.awt.Color(240, 240, 240));
         
-        // Criar painel de cards
+        // Criar painel de cards com estilo
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
+        cardPanel.setBackground(new java.awt.Color(240, 240, 240));
         
         // Criar as telas (cards) com o usuário ID
         dashboardCard = new DashboardCard(usuarioId, this);
@@ -58,7 +61,11 @@ public class MenuPrincipal extends JFrame {
         cardPanel.add(transacoesCard, "TRANSAÇÕES");
         cardPanel.add(relatoriosCard, "RELATORIOS");
         
+        // Painel de navegação superior
+        JPanel panelNavegacao = criarPainelNavegacao();
+        
         // Adicionar ao frame
+        add(panelNavegacao, BorderLayout.NORTH);
         add(cardPanel, BorderLayout.CENTER);
         
         // Centralizar na tela
@@ -67,6 +74,45 @@ public class MenuPrincipal extends JFrame {
         
         // Mostrar tela inicial
         mostrarTela("INICIO");
+    }
+    
+    private JPanel criarPainelNavegacao() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        panel.setBackground(new java.awt.Color(220, 220, 220));
+        panel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(150, 150, 150)));
+        
+        // Botões de navegação
+        JButton btnInicio = new JButton("Página Inicial");
+        JButton btnContas = new JButton("Contas");
+        JButton btnCategorias = new JButton("Categorias");
+        JButton btnTransacoes = new JButton("Transações");
+        JButton btnRelatorios = new JButton("Relatórios");
+        JButton btnVoltar = new JButton("Voltar ao Dashboard");
+        
+        // Estilo dos botões usando UIStyler
+        for (JButton btn : new JButton[]{btnInicio, btnContas, btnCategorias, btnTransacoes, btnRelatorios}) {
+            UIStyler.styleSecondaryButton(btn);
+        }
+        UIStyler.styleNeutralButton(btnVoltar);
+        
+        panel.add(btnInicio);
+        panel.add(btnContas);
+        panel.add(btnCategorias);
+        panel.add(btnTransacoes);
+        panel.add(btnRelatorios);
+        
+        panel.add(Box.createHorizontalGlue());
+        panel.add(btnVoltar);
+        
+        // Ações dos botões
+        btnInicio.addActionListener(e -> mostrarTela("INICIO"));
+        btnContas.addActionListener(e -> mostrarTela("CONTAS"));
+        btnCategorias.addActionListener(e -> mostrarTela("CATEGORIAS"));
+        btnTransacoes.addActionListener(e -> mostrarTela("TRANSAÇÕES"));
+        btnRelatorios.addActionListener(e -> mostrarTela("RELATORIOS"));
+        btnVoltar.addActionListener(e -> dispose());
+        
+        return panel;
     }
     
     private void setupMenu() {

@@ -196,7 +196,7 @@ public class ContasCard extends CardBase {
                 conta.getId(),
                 conta.getNome(),
                 formatarTipoConta(conta.getTipo()),
-                String.format("R$ %,.2f", conta.getSaldoAtual()),
+                String.format("MT %,.2f", conta.getSaldoAtual()),
                 conta.getInstituicao(),
                 conta.getAtivo() ? "Ativa" : "Inativa"
             };

@@ -285,9 +285,9 @@ public class TransacaoController {
         return String.format(
                 "📊 Resumo do Mês\n"
                 + "━━━━━━━━━━━━━━━━━━━━\n"
-                + "💰 Receitas: R$ %,.2f\n"
-                + "💸 Despesas: R$ %,.2f\n"
-                + "📈 Saldo: R$ %,.2f\n"
+                + "💰 Receitas: MT %,.2f\n"
+                + "💸 Despesas: MT %,.2f\n"
+                + "📈 Saldo: MT %,.2f\n"
                 + "━━━━━━━━━━━━━━━━━━━━",
                 receitas, despesas, saldo
         );
@@ -307,6 +307,16 @@ public class TransacaoController {
                     .toList();
         } catch (SQLException e) {
             System.err.println("Erro ao obter transações vencidas: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    // NOVO: Obter receitas por categoria
+    public List<Object[]> obterReceitasPorCategoria(LocalDate inicio, LocalDate fim) {
+        try {
+            return transacaoDAO.obterReceitasPorCategoria(usuarioLogadoId, inicio, fim);
+        } catch (SQLException e) {
+            System.err.println("Erro ao obter receitas por categoria: " + e.getMessage());
             return List.of();
         }
     }

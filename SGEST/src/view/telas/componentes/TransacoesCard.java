@@ -800,7 +800,7 @@ public class TransacoesCard extends CardBase {
             
             if (value instanceof BigDecimal) {
                 BigDecimal valor = (BigDecimal) value;
-                setText(String.format("R$ %,.2f", valor));
+                setText(String.format("MT %,.2f", valor));
                 
                 // Verificar se é despesa ou receita
                 try {

@@ -18,10 +18,8 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             try {
                 // Para teste, use usuário ID 1
-                MenuPrincipal menu = new MenuPrincipal(1);
-                menu.setVisible(true);
-                menu.setLocationRelativeTo(null);
-                menu.mostrarTela("DASHBOARD"); // Iniciar com o Dashboard
+                DashboardView dashboard = new DashboardView(1);
+                dashboard.setVisible(true);
             } catch (Exception e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null, 

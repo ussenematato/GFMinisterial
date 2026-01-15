@@ -5,6 +5,8 @@ import controller.CategoriaController;
 import controller.TransacaoController;
 import model.entity.Conta;
 import model.entity.Transacao;
+import util.CurrencyUtils;
+import util.UIStyler;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -84,28 +86,28 @@ public class DashboardView extends JFrame {
         JLabel lblTituloSaldo = new JLabel("Saldo Total:");
         lblTituloSaldo.setFont(new Font("Arial", Font.BOLD, 14));
         
-        lblSaldoTotal = new JLabel("R$ 0,00");
+        lblSaldoTotal = new JLabel("MT 0,00");
         lblSaldoTotal.setFont(new Font("Arial", Font.BOLD, 24));
         lblSaldoTotal.setForeground(new Color(0, 100, 0));
         
         JLabel lblTituloReceitas = new JLabel("Receitas do Mês:");
         lblTituloReceitas.setFont(new Font("Arial", Font.PLAIN, 12));
         
-        lblReceitasMes = new JLabel("R$ 0,00");
+        lblReceitasMes = new JLabel("MT 0,00");
         lblReceitasMes.setFont(new Font("Arial", Font.BOLD, 16));
         lblReceitasMes.setForeground(new Color(0, 150, 0));
         
         JLabel lblTituloDespesas = new JLabel("Despesas do Mês:");
         lblTituloDespesas.setFont(new Font("Arial", Font.PLAIN, 12));
         
-        lblDespesasMes = new JLabel("R$ 0,00");
+        lblDespesasMes = new JLabel("MT 0,00");
         lblDespesasMes.setFont(new Font("Arial", Font.BOLD, 16));
         lblDespesasMes.setForeground(new Color(200, 0, 0));
         
         JLabel lblTituloSaldoMes = new JLabel("Saldo do Mês:");
         lblTituloSaldoMes.setFont(new Font("Arial", Font.PLAIN, 12));
         
-        lblSaldoMes = new JLabel("R$ 0,00");
+        lblSaldoMes = new JLabel("MT 0,00");
         lblSaldoMes.setFont(new Font("Arial", Font.BOLD, 16));
         
         // Adicionando ao painel
@@ -215,24 +217,26 @@ public class DashboardView extends JFrame {
     
     private JPanel criarPanelBotoes() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        panel.setBackground(new Color(240, 240, 240));
         
+        JButton btnMenuCompleto = new JButton("Menu Completo");
         JButton btnGerenciarCategorias = new JButton("Gerenciar Categorias");
         JButton btnRelatorios = new JButton("Relatórios");
         JButton btnSair = new JButton("Sair");
         
-        // Estilização
-        btnGerenciarCategorias.setBackground(new Color(70, 130, 180));
-        btnGerenciarCategorias.setForeground(Color.WHITE);
-        btnRelatorios.setBackground(new Color(60, 179, 113));
-        btnRelatorios.setForeground(Color.WHITE);
-        btnSair.setBackground(new Color(220, 20, 60));
-        btnSair.setForeground(Color.WHITE);
+        // Estilização usando UIStyler
+        UIStyler.stylePrimaryButton(btnMenuCompleto);
+        UIStyler.styleSecondaryButton(btnGerenciarCategorias);
+        UIStyler.styleSuccessButton(btnRelatorios);
+        UIStyler.styleDangerButton(btnSair);
         
+        panel.add(btnMenuCompleto);
         panel.add(btnGerenciarCategorias);
         panel.add(btnRelatorios);
         panel.add(btnSair);
         
         // Ações dos botões
+        btnMenuCompleto.addActionListener(e -> abrirMenuCompleto());
         btnGerenciarCategorias.addActionListener(e -> abrirGerenciadorCategorias());
         btnRelatorios.addActionListener(e -> abrirRelatorios());
         btnSair.addActionListener(e -> sair());
@@ -318,6 +322,11 @@ public class DashboardView extends JFrame {
     }
     
     // Métodos de navegação
+    private void abrirMenuCompleto() {
+        MenuPrincipal menu = new MenuPrincipal(usuarioId);
+        menu.setVisible(true);
+    }
+    
     private void abrirCadastroConta() {
         new ContaView(usuarioId, this).setVisible(true);
     }
@@ -391,7 +400,7 @@ public class DashboardView extends JFrame {
     
     // Métodos auxiliares
     private String formatarMoeda(BigDecimal valor) {
-        return String.format("R$ %,.2f", valor);
+        return CurrencyUtils.formatCurrency(valor);
     }
     
     private String formatarTipoConta(String tipo) {

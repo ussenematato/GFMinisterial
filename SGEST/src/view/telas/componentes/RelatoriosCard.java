@@ -186,7 +186,7 @@ public class RelatoriosCard extends CardBase {
         JPanel panelTabela = new JPanel(new BorderLayout());
         panelTabela.setBorder(BorderFactory.createTitledBorder("Despesas por Categoria"));
         
-        String[] colunas = {"Categoria", "Valor (R$)", "Percentual"};
+        String[] colunas = {"Categoria", "Valor (MT)", "Percentual"};
         modeloTabela = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -289,10 +289,10 @@ public class RelatoriosCard extends CardBase {
             BigDecimal saldoTotal = contaController.obterSaldoTotal();
             
             // Atualizar labels
-            lblTotalReceitas.setText(String.format("R$ %,.2f", receitas));
-            lblTotalDespesas.setText(String.format("R$ %,.2f", despesas));
-            lblSaldoPeriodo.setText(String.format("R$ %,.2f", saldoPeriodo));
-            lblSaldoTotal.setText(String.format("R$ %,.2f", saldoTotal));
+            lblTotalReceitas.setText(String.format("MT %,.2f", receitas));
+            lblTotalDespesas.setText(String.format("MT %,.2f", despesas));
+            lblSaldoPeriodo.setText(String.format("MT %,.2f", saldoPeriodo));
+            lblSaldoTotal.setText(String.format("MT %,.2f", saldoTotal));
             
             // Colorir saldo do período
             if (saldoPeriodo.compareTo(BigDecimal.ZERO) >= 0) {
@@ -339,7 +339,7 @@ public class RelatoriosCard extends CardBase {
                 
                 Object[] linhaTabela = {
                     categoria,
-                    String.format("R$ %,.2f", valor),
+                    String.format("MT %,.2f", valor),
                     String.format("%.1f%%", percentual)
                 };
                 modeloTabela.addRow(linhaTabela);
