@@ -170,15 +170,11 @@ public class CategoriaView extends JDialog {
         btnExcluir = new JButton("Excluir");
         btnCancelar = new JButton("Cancelar");
         
-        // Estilização
-        btnSalvar.setBackground(new Color(60, 179, 113));
-        btnSalvar.setForeground(Color.WHITE);
-        btnEditar.setBackground(new Color(70, 130, 180));
-        btnEditar.setForeground(Color.WHITE);
-        btnExcluir.setBackground(new Color(220, 20, 60));
-        btnExcluir.setForeground(Color.WHITE);
-        btnCancelar.setBackground(new Color(169, 169, 169));
-        btnCancelar.setForeground(Color.WHITE);
+        // Estilização simples
+        util.UIStyler.styleSuccessButton(btnSalvar);
+        util.UIStyler.styleSecondaryButton(btnEditar);
+        util.UIStyler.styleDangerButton(btnExcluir);
+        util.UIStyler.styleNeutralButton(btnCancelar);
         
         panel.add(btnSalvar);
         panel.add(btnEditar);

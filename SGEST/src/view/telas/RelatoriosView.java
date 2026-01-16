@@ -90,16 +90,12 @@ public class RelatoriosView extends JDialog {
         JButton btnImprimir = new JButton("Imprimir");
         JButton btnFechar = new JButton("Fechar");
         
-        btnExportar.setBackground(new java.awt.Color(34, 139, 34));
-        btnExportar.setForeground(java.awt.Color.WHITE);
+        util.UIStyler.styleSuccessButton(btnExportar);
+        util.UIStyler.styleSecondaryButton(btnImprimir);
+        util.UIStyler.styleNeutralButton(btnFechar);
+        
         btnExportar.addActionListener(e -> exportarParaExcel());
-        
-        btnImprimir.setBackground(new java.awt.Color(70, 130, 180));
-        btnImprimir.setForeground(java.awt.Color.WHITE);
         btnImprimir.addActionListener(e -> imprimir());
-        
-        btnFechar.setBackground(new java.awt.Color(169, 169, 169));
-        btnFechar.setForeground(java.awt.Color.WHITE);
         btnFechar.addActionListener(e -> dispose());
         
         panelBotoes.add(btnExportar);
@@ -469,6 +465,9 @@ public class RelatoriosView extends JDialog {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Salvar Relatório em Excel");
             fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Excel Files", "xlsx"));
+            // Definir diretório padrão (Documents do usuário)
+            String docPath = System.getProperty("user.home") + File.separator + "Documents";
+            fileChooser.setCurrentDirectory(new File(docPath));
             
             int resultado = fileChooser.showSaveDialog(this);
             if (resultado == JFileChooser.APPROVE_OPTION) {
@@ -477,11 +476,22 @@ public class RelatoriosView extends JDialog {
                     arquivo = new File(arquivo.getAbsolutePath() + ".xlsx");
                 }
                 
+                // Garantir que o diretório pai existe
+                File diretorioPai = arquivo.getParentFile();
+                if (diretorioPai != null && !diretorioPai.exists()) {
+                    diretorioPai.mkdirs();
+                }
+                
                 criarExcel(arquivo);
-                JOptionPane.showMessageDialog(this, "Relatório exportado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, 
+                    "Relatório exportado com sucesso!\nArquivo salvo em: " + arquivo.getAbsolutePath(), 
+                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao exportar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, 
+                "Erro ao exportar: " + ex.getMessage() + "\nVerifique permissões e espaço em disco.", 
+                "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -600,10 +610,13 @@ public class RelatoriosView extends JDialog {
         sheet.setColumnWidth(0, 5000);
         sheet.setColumnWidth(1, 3000);
         
+        // Escrever arquivo com try-with-resources para garantir fechamento adequado
         try (FileOutputStream out = new FileOutputStream(arquivo)) {
             workbook.write(out);
+            out.flush();
+        } finally {
+            workbook.close();
         }
-        workbook.close();
     }
     
     private void carregarRelatorios() {

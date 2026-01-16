@@ -3,6 +3,7 @@ package view.telas.componentes;
 import javax.swing.*;
 import java.awt.*;
 import view.telas.MenuPrincipal;
+import util.UIStyler;
 
 public abstract class CardBase extends JPanel {
     
@@ -41,23 +42,25 @@ public abstract class CardBase extends JPanel {
     
     protected JButton criarBotao(String texto, Color corFundo) {
         JButton botao = new JButton(texto);
-        botao.setBackground(corFundo);
-        botao.setForeground(Color.WHITE);
-        botao.setFocusPainted(false);
-        botao.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(corFundo.darker(), 1),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
         
-        // Efeito hover
-        botao.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                botao.setBackground(corFundo.brighter());
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                botao.setBackground(corFundo);
-            }
-        });
+        // Mapear cores ao estilo UIStyler
+        if (corFundo.getRGB() == new Color(76, 175, 80).getRGB() || 
+            corFundo.getRGB() == new Color(60, 179, 113).getRGB() ||
+            corFundo.getRGB() == new Color(34, 139, 34).getRGB()) {
+            UIStyler.styleSuccessButton(botao);
+        } else if (corFundo.getRGB() == new Color(244, 67, 54).getRGB() || 
+                   corFundo.getRGB() == new Color(220, 20, 60).getRGB()) {
+            UIStyler.styleDangerButton(botao);
+        } else if (corFundo.getRGB() == new Color(255, 193, 7).getRGB() || 
+                   corFundo.getRGB() == new Color(255, 152, 0).getRGB()) {
+            UIStyler.styleWarningButton(botao);
+        } else if (corFundo.getRGB() == new Color(158, 158, 158).getRGB() || 
+                   corFundo.getRGB() == new Color(169, 169, 169).getRGB()) {
+            UIStyler.styleNeutralButton(botao);
+        } else {
+            // Padrão: Secondary
+            UIStyler.styleSecondaryButton(botao);
+        }
         
         return botao;
     }

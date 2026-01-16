@@ -236,8 +236,7 @@ public class TransacaoView extends JDialog {
         
         // Botão Filtrar
         btnFiltrar = new JButton("Filtrar");
-        btnFiltrar.setBackground(new Color(70, 130, 180));
-        btnFiltrar.setForeground(Color.WHITE);
+        util.UIStyler.stylePrimaryButton(btnFiltrar);
         btnFiltrar.addActionListener(e -> {
             LocalDate inicio = LocalDate.parse(txtDataInicio.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             LocalDate fim = LocalDate.parse(txtDataFim.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -283,15 +282,11 @@ public class TransacaoView extends JDialog {
         btnExcluir = new JButton("Excluir");
         btnCancelar = new JButton("Cancelar");
         
-        // Estilização
-        btnSalvar.setBackground(new Color(60, 179, 113));
-        btnSalvar.setForeground(Color.WHITE);
-        btnEditar.setBackground(new Color(70, 130, 180));
-        btnEditar.setForeground(Color.WHITE);
-        btnExcluir.setBackground(new Color(220, 20, 60));
-        btnExcluir.setForeground(Color.WHITE);
-        btnCancelar.setBackground(new Color(169, 169, 169));
-        btnCancelar.setForeground(Color.WHITE);
+        // Estilização simples
+        util.UIStyler.styleSuccessButton(btnSalvar);
+        util.UIStyler.styleSecondaryButton(btnEditar);
+        util.UIStyler.styleDangerButton(btnExcluir);
+        util.UIStyler.styleNeutralButton(btnCancelar);
         
         panel.add(btnSalvar);
         panel.add(btnEditar);
@@ -321,6 +316,15 @@ public class TransacaoView extends JDialog {
         
         // Carregar categorias por tipo inicial
         atualizarCategoriasPorTipo();
+    }
+    
+    // Método para recarregar combos após alterações de saldo
+    public void atualizarComboContas() {
+        List<Conta> contas = contaController.listarContasAtivas();
+        cmbConta.removeAllItems();
+        for (Conta conta : contas) {
+            cmbConta.addItem(conta);
+        }
     }
     
     private void atualizarCategoriasPorTipo() {
@@ -447,6 +451,7 @@ public class TransacaoView extends JDialog {
                     JOptionPane.showMessageDialog(this, "Transação registrada com sucesso!");
                     limparFormulario();
                     carregarTransacoesPeriodo();
+                    atualizarComboContas();
                     if (dashboardView != null) {
                         dashboardView.atualizarDashboard();
                     }
@@ -467,6 +472,7 @@ public class TransacaoView extends JDialog {
                     JOptionPane.showMessageDialog(this, "Transação atualizada com sucesso!");
                     limparFormulario();
                     carregarTransacoesPeriodo();
+                    atualizarComboContas();
                     if (dashboardView != null) {
                         dashboardView.atualizarDashboard();
                     }
@@ -544,6 +550,7 @@ public class TransacaoView extends JDialog {
                 if (sucesso) {
                     JOptionPane.showMessageDialog(this, "Transação excluída com sucesso!");
                     carregarTransacoesPeriodo();
+                    atualizarComboContas();
                     if (dashboardView != null) {
                         dashboardView.atualizarDashboard();
                     }

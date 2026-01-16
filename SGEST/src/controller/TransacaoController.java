@@ -48,7 +48,11 @@ public class TransacaoController {
             transacaoDAO.criar(transacao);
 
             // Atualizar saldo da conta
-            atualizarSaldoConta(contaId, valor, tipo);
+            // Para RECEITA: deduz imediatamente (pago automaticamente)
+            // Para DESPESA: só deduz quando for marcada como paga
+            if ("RECEITA".equalsIgnoreCase(tipo)) {
+                atualizarSaldoConta(contaId, valor, tipo);
+            }
 
             return true;
         } catch (SQLException | IllegalArgumentException | IllegalStateException e) {
@@ -66,11 +70,15 @@ public class TransacaoController {
                 return false;
             }
 
-            // Reverter saldo antigo
+            // Reverter saldo antigo (apenas se transação estava paga ou é receita)
             BigDecimal valorAntigo = transacao.getValor();
             String tipoAntigo = transacao.getTipo();
-            atualizarSaldoConta(transacao.getContaId(), valorAntigo,
-                    "DESPESA".equals(tipoAntigo) ? "RECEITA" : "DESPESA");
+            boolean transacaoAntigaPaga = transacao.getPago();
+            
+            if ("RECEITA".equals(tipoAntigo) || transacaoAntigaPaga) {
+                atualizarSaldoConta(transacao.getContaId(), valorAntigo,
+                        "DESPESA".equals(tipoAntigo) ? "RECEITA" : "DESPESA");
+            }
 
             // Atualizar transação
             transacao.setDescricao(descricao);
@@ -82,8 +90,10 @@ public class TransacaoController {
 
             transacaoDAO.atualizar(transacao);
 
-            // Aplicar novo saldo
-            atualizarSaldoConta(contaId, valor, transacao.getTipo());
+            // Aplicar novo saldo (apenas se transação está paga ou é receita)
+            if ("RECEITA".equals(transacao.getTipo()) || transacaoAntigaPaga) {
+                atualizarSaldoConta(contaId, valor, transacao.getTipo());
+            }
 
             return true;
         } catch (SQLException e) {
@@ -99,9 +109,11 @@ public class TransacaoController {
                 return false;
             }
 
-            // Reverter saldo
-            atualizarSaldoConta(transacao.getContaId(), transacao.getValor(),
-                    "DESPESA".equals(transacao.getTipo()) ? "RECEITA" : "DESPESA");
+            // Reverter saldo apenas se transação estava paga ou é receita
+            if ("RECEITA".equals(transacao.getTipo()) || transacao.getPago()) {
+                atualizarSaldoConta(transacao.getContaId(), transacao.getValor(),
+                        "DESPESA".equals(transacao.getTipo()) ? "RECEITA" : "DESPESA");
+            }
 
             transacaoDAO.excluir(id);
             return true;
@@ -121,7 +133,8 @@ public class TransacaoController {
             if (!transacao.getPago()) {
                 transacaoDAO.marcarComoPago(id);
 
-                // Atualizar saldo apenas se for despesa e ainda não paga
+                // Atualizar saldo APENAS para despesas quando marcadas como pagas
+                // Receitas já foram contabilizadas ao criar
                 if ("DESPESA".equals(transacao.getTipo())) {
                     atualizarSaldoConta(transacao.getContaId(), transacao.getValor(), "DESPESA");
                 }
