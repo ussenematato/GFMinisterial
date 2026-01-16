@@ -233,6 +233,8 @@ public class TransacoesCard extends CardBase {
         
         tblTransacoes = new JTable(modelTransacoes);
         tblTransacoes.setRowHeight(30);
+        tblTransacoes.setShowGrid(true);
+        tblTransacoes.setGridColor(new Color(220, 220, 220));
         tblTransacoes.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tblTransacoes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         

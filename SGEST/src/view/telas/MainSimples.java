@@ -1,29 +1,26 @@
 package view.telas;
 
 import javax.swing.*;
+import com.formdev.flatlaf.FlatLightLaf;
 
 public class MainSimples {
+
     public static void main(String[] args) {
-        // Usar o Look and Feel do sistema (sem FlatLaf)
+        // Configurar Look and Feel (FlatLaf)
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        
-        SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup();
+        } catch (Exception e) {
             try {
-                System.out.println("Iniciando DashboardView...");
-                DashboardView dashboard = new DashboardView(1);
-                dashboard.setVisible(true);
-                System.out.println("Aplicação iniciada com sucesso!");
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(null, 
-                    "Erro ao iniciar sistema: " + e.getMessage(), 
-                    "Erro", 
-                    JOptionPane.ERROR_MESSAGE);
-                System.exit(1);
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        // Iniciar a aplicação com DashboardView
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new DashboardView(1).setVisible(true);
             }
         });
     }

@@ -144,6 +144,8 @@ public class CategoriasCard extends CardBase {
         
         tblCategorias = new JTable(modelCategorias);
         tblCategorias.setRowHeight(30);
+        tblCategorias.setShowGrid(true);
+        tblCategorias.setGridColor(new Color(220, 220, 220));
         tblCategorias.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tblCategorias.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         tblCategorias.getColumnModel().getColumn(4).setCellRenderer(new Renderers.CorCellRenderer());

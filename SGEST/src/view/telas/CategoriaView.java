@@ -137,6 +137,8 @@ public class CategoriaView extends JDialog {
         
         tblCategorias = new JTable(modelCategorias);
         tblCategorias.setRowHeight(25);
+        tblCategorias.setShowGrid(true);
+        tblCategorias.setGridColor(new Color(220, 220, 220));
         tblCategorias.getColumnModel().getColumn(4).setCellRenderer(new CorCellRenderer());
         
         JScrollPane scrollPane = new JScrollPane(tblCategorias);

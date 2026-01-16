@@ -412,6 +412,9 @@ public class RelatoriosView extends JDialog {
         }
         
         JTable tabela = new JTable(model);
+        tabela.setRowHeight(25);
+        tabela.setShowGrid(true);
+        tabela.setGridColor(new Color(220, 220, 220));
         JScrollPane scrollPane = new JScrollPane(tabela);
         scrollPane.setPreferredSize(new Dimension(400, 300));
         

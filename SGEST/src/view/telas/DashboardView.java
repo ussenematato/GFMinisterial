@@ -142,6 +142,8 @@ public class DashboardView extends JFrame {
         
         tblContas = new JTable(modelContas);
         tblContas.setRowHeight(25);
+        tblContas.setShowGrid(true);
+        tblContas.setGridColor(new Color(220, 220, 220));
         tblContas.getColumnModel().getColumn(2).setCellRenderer(new SaldoCellRenderer());
         
         JScrollPane scrollPane = new JScrollPane(tblContas);
@@ -189,6 +191,8 @@ public class DashboardView extends JFrame {
         
         tblUltimasTransacoes = new JTable(modelTransacoes);
         tblUltimasTransacoes.setRowHeight(25);
+        tblUltimasTransacoes.setShowGrid(true);
+        tblUltimasTransacoes.setGridColor(new Color(220, 220, 220));
         tblUltimasTransacoes.getColumnModel().getColumn(3).setCellRenderer(new ValorCellRenderer());
         
         JScrollPane scrollPane = new JScrollPane(tblUltimasTransacoes);

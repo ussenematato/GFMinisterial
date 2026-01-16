@@ -265,6 +265,8 @@ public class TransacaoView extends JDialog {
         
         tblTransacoes = new JTable(modelTransacoes);
         tblTransacoes.setRowHeight(25);
+        tblTransacoes.setShowGrid(true);
+        tblTransacoes.setGridColor(new Color(220, 220, 220));
         tblTransacoes.getColumnModel().getColumn(5).setCellRenderer(new ValorCellRenderer());
         tblTransacoes.getColumnModel().getColumn(6).setCellRenderer(new StatusCellRenderer());
         

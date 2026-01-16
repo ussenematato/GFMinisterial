@@ -145,6 +145,8 @@ public class DashboardCard extends CardBase {
         tblContas.setRowHeight(30);
         tblContas.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tblContas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tblContas.setShowGrid(true);
+        tblContas.setGridColor(new Color(220, 220, 220));
         
         // Renderer personalizado para saldo (sem usar a classe Renderers)
         tblContas.getColumnModel().getColumn(2).setCellRenderer(new SaldoCellRendererCustom());
@@ -224,6 +226,8 @@ public class DashboardCard extends CardBase {
         tblUltimasTransacoes.setRowHeight(30);
         tblUltimasTransacoes.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tblUltimasTransacoes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tblUltimasTransacoes.setShowGrid(true);
+        tblUltimasTransacoes.setGridColor(new Color(220, 220, 220));
         
         // Renderer personalizado para valor (sem usar a classe Renderers)
         tblUltimasTransacoes.getColumnModel().getColumn(2).setCellRenderer(new ValorCellRendererCustom());

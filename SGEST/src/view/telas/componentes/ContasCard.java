@@ -137,6 +137,8 @@ public class ContasCard extends CardBase {
         
         tblContas = new JTable(modelContas);
         tblContas.setRowHeight(30);
+        tblContas.setShowGrid(true);
+        tblContas.setGridColor(new Color(220, 220, 220));
         tblContas.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tblContas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         

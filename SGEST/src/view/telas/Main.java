@@ -17,15 +17,15 @@ public class Main {
         
         SwingUtilities.invokeLater(() -> {
             try {
-                // Para teste, use usuário ID 1
-                DashboardView dashboard = new DashboardView(1);
-                dashboard.setVisible(true);
+                LoginView loginView = new LoginView();
+                loginView.setVisible(true);
             } catch (Exception e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null, 
                     "Erro ao iniciar sistema: " + e.getMessage(), 
                     "Erro", 
                     JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
             }
         });
     }

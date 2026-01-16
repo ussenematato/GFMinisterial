@@ -196,6 +196,8 @@ public class RelatoriosCard extends CardBase {
         
         tabelaDetalhamento = new JTable(modeloTabela);
         tabelaDetalhamento.setRowHeight(25);
+        tabelaDetalhamento.setShowGrid(true);
+        tabelaDetalhamento.setGridColor(new Color(220, 220, 220));
         JScrollPane scrollPane = new JScrollPane(tabelaDetalhamento);
         panelTabela.add(scrollPane, BorderLayout.CENTER);
         

@@ -130,6 +130,8 @@ public class ContaView extends JDialog {
         
         tblContas = new JTable(modelContas);
         tblContas.setRowHeight(25);
+        tblContas.setShowGrid(true);
+        tblContas.setGridColor(new Color(220, 220, 220));
         tblContas.getColumnModel().getColumn(3).setCellRenderer(new SaldoRenderer());
         
         JScrollPane scrollPane = new JScrollPane(tblContas);

@@ -21,6 +21,7 @@ public class MenuPrincipal extends JFrame {
     private CategoriasCard categoriasCard;
     private TransacoesCard transacoesCard;
     private RelatoriosCard relatoriosCard;
+    private AdmiSystemCard admiSystemCard;
     
     // Menu
     private JMenuBar menuBar;
@@ -53,6 +54,7 @@ public class MenuPrincipal extends JFrame {
         categoriasCard = new CategoriasCard(usuarioId, this);
         transacoesCard = new TransacoesCard(usuarioId, this);
         relatoriosCard = new RelatoriosCard(usuarioId, this);
+        admiSystemCard = new AdmiSystemCard(usuarioId, this);
         
         // Adicionar cards ao painel
         cardPanel.add(dashboardCard, "INICIO");
@@ -60,6 +62,7 @@ public class MenuPrincipal extends JFrame {
         cardPanel.add(categoriasCard, "CATEGORIAS");
         cardPanel.add(transacoesCard, "TRANSAÇÕES");
         cardPanel.add(relatoriosCard, "RELATORIOS");
+        cardPanel.add(admiSystemCard, "ADMISYSTEM");
         
         // Painel de navegação superior
         JPanel panelNavegacao = criarPainelNavegacao();
@@ -87,12 +90,14 @@ public class MenuPrincipal extends JFrame {
         JButton btnCategorias = new JButton("Categorias");
         JButton btnTransacoes = new JButton("Transações");
         JButton btnRelatorios = new JButton("Relatórios");
+        JButton btnAdmiSystem = new JButton("AdmiSystem");
         JButton btnVoltar = new JButton("Voltar ao Dashboard");
         
         // Estilo dos botões usando UIStyler
         for (JButton btn : new JButton[]{btnInicio, btnContas, btnCategorias, btnTransacoes, btnRelatorios}) {
             UIStyler.styleSecondaryButton(btn);
         }
+        UIStyler.styleDangerButton(btnAdmiSystem); // Destacar como acesso crítico
         UIStyler.styleNeutralButton(btnVoltar);
         
         panel.add(btnInicio);
@@ -100,11 +105,19 @@ public class MenuPrincipal extends JFrame {
         panel.add(btnCategorias);
         panel.add(btnTransacoes);
         panel.add(btnRelatorios);
+        panel.add(btnAdmiSystem);
         
         panel.add(Box.createHorizontalGlue());
         panel.add(btnVoltar);
         
         // Ações dos botões
+        btnInicio.addActionListener(e -> mostrarTela("INICIO"));
+        btnContas.addActionListener(e -> mostrarTela("CONTAS"));
+        btnCategorias.addActionListener(e -> mostrarTela("CATEGORIAS"));
+        btnTransacoes.addActionListener(e -> mostrarTela("TRANSAÇÕES"));
+        btnRelatorios.addActionListener(e -> mostrarTela("RELATORIOS"));
+        btnAdmiSystem.addActionListener(e -> mostrarTela("ADMISYSTEM"));
+        btnVoltar.addActionListener(e -> dispose());
         btnInicio.addActionListener(e -> mostrarTela("INICIO"));
         btnContas.addActionListener(e -> mostrarTela("CONTAS"));
         btnCategorias.addActionListener(e -> mostrarTela("CATEGORIAS"));
