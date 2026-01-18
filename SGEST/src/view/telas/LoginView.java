@@ -253,10 +253,10 @@ public class LoginView extends JFrame {
             this.usuarioLogado = usuario;
             lblMensagem.setText("");
             
-            // Abrir DashboardView
+            // Abrir MenuPrincipal com todos os dados
             SwingUtilities.invokeLater(() -> {
-                DashboardView dashboardView = new DashboardView(usuario.getId());
-                dashboardView.setVisible(true);
+                MenuPrincipal menuPrincipal = new MenuPrincipal(usuario.getId());
+                menuPrincipal.setVisible(true);
                 this.dispose();
             });
             

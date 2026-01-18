@@ -2,14 +2,18 @@ package view.telas;
 
 import view.telas.componentes.*;
 import util.UIStyler;
+import model.entity.Usuario;
+import model.dao.UsuarioDAO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.sql.SQLException;
 
 public class MenuPrincipal extends JFrame {
     
     // Controllers (serão injetados)
     private Integer usuarioId;
+    private String perfilUsuario;
     
     // Sistema de cards
     private CardLayout cardLayout;
@@ -22,16 +26,43 @@ public class MenuPrincipal extends JFrame {
     private TransacoesCard transacoesCard;
     private RelatoriosCard relatoriosCard;
     private AdmiSystemCard admiSystemCard;
+    private LogsCard logsCard;
+    private view.telas.componentes.ConfiguracoesCard configuracoesCard;
     
     // Menu
     private JMenuBar menuBar;
     
     public MenuPrincipal(Integer usuarioId) {
         this.usuarioId = usuarioId;
+        carregarPerfilUsuario();
         initComponents();
         // setupMenu(); // Removido: usando painel de navegação ao invés de menu bar
         setupCards();
         setupKeyboardShortcuts();
+    }
+    
+    private void carregarPerfilUsuario() {
+        try {
+            UsuarioDAO usuarioDAO = new UsuarioDAO();
+            Usuario usuario = usuarioDAO.buscarPorId(usuarioId);
+            if (usuario != null) {
+                this.perfilUsuario = usuario.getPerfil();
+            } else {
+                this.perfilUsuario = "TESOUREIRO";
+            }
+        } catch (SQLException e) {
+            this.perfilUsuario = "TESOUREIRO";
+        }
+    }
+    
+    private boolean temAcessoAdminSystem() {
+        // Apenas SuperAdmin tem acesso
+        return "SUPERADMIN".equalsIgnoreCase(perfilUsuario);
+    }
+    
+    private boolean temAcessoLogs() {
+        // Apenas SuperAdmin tem acesso
+        return "SUPERADMIN".equalsIgnoreCase(perfilUsuario);
     }
     
     private void initComponents() {
@@ -55,6 +86,8 @@ public class MenuPrincipal extends JFrame {
         transacoesCard = new TransacoesCard(usuarioId, this);
         relatoriosCard = new RelatoriosCard(usuarioId, this);
         admiSystemCard = new AdmiSystemCard(usuarioId, this);
+        logsCard = new LogsCard(usuarioId, this);
+        configuracoesCard = new view.telas.componentes.ConfiguracoesCard(usuarioId, this);
         
         // Adicionar cards ao painel
         cardPanel.add(dashboardCard, "INICIO");
@@ -63,6 +96,8 @@ public class MenuPrincipal extends JFrame {
         cardPanel.add(transacoesCard, "TRANSAÇÕES");
         cardPanel.add(relatoriosCard, "RELATORIOS");
         cardPanel.add(admiSystemCard, "ADMISYSTEM");
+        cardPanel.add(logsCard, "LOGS");
+        cardPanel.add(configuracoesCard, "CONFIGURACOES");
         
         // Painel de navegação superior
         JPanel panelNavegacao = criarPainelNavegacao();
@@ -90,14 +125,17 @@ public class MenuPrincipal extends JFrame {
         JButton btnCategorias = new JButton("Categorias");
         JButton btnTransacoes = new JButton("Transações");
         JButton btnRelatorios = new JButton("Relatórios");
+        JButton btnConfiguracoes = new JButton("Configurações");
         JButton btnAdmiSystem = new JButton("AdmiSystem");
+        JButton btnLogs = new JButton("Gestão de Logs");
         JButton btnVoltar = new JButton("Voltar ao Dashboard");
         
         // Estilo dos botões usando UIStyler
-        for (JButton btn : new JButton[]{btnInicio, btnContas, btnCategorias, btnTransacoes, btnRelatorios}) {
+        for (JButton btn : new JButton[]{btnInicio, btnContas, btnCategorias, btnTransacoes, btnRelatorios, btnConfiguracoes}) {
             UIStyler.styleSecondaryButton(btn);
         }
         UIStyler.styleDangerButton(btnAdmiSystem); // Destacar como acesso crítico
+        UIStyler.styleWarningButton(btnLogs); // Destacar como acesso crítico
         UIStyler.styleNeutralButton(btnVoltar);
         
         panel.add(btnInicio);
@@ -105,7 +143,16 @@ public class MenuPrincipal extends JFrame {
         panel.add(btnCategorias);
         panel.add(btnTransacoes);
         panel.add(btnRelatorios);
-        panel.add(btnAdmiSystem);
+        panel.add(btnConfiguracoes);
+        
+        // SuperAdmin tem acesso a TUDO - AdminSystem e Logs
+        if (temAcessoAdminSystem()) {
+            panel.add(btnAdmiSystem);
+        }
+        
+        if (temAcessoLogs()) {
+            panel.add(btnLogs);
+        }
         
         panel.add(Box.createHorizontalGlue());
         panel.add(btnVoltar);
@@ -116,13 +163,16 @@ public class MenuPrincipal extends JFrame {
         btnCategorias.addActionListener(e -> mostrarTela("CATEGORIAS"));
         btnTransacoes.addActionListener(e -> mostrarTela("TRANSAÇÕES"));
         btnRelatorios.addActionListener(e -> mostrarTela("RELATORIOS"));
-        btnAdmiSystem.addActionListener(e -> mostrarTela("ADMISYSTEM"));
-        btnVoltar.addActionListener(e -> dispose());
-        btnInicio.addActionListener(e -> mostrarTela("INICIO"));
-        btnContas.addActionListener(e -> mostrarTela("CONTAS"));
-        btnCategorias.addActionListener(e -> mostrarTela("CATEGORIAS"));
-        btnTransacoes.addActionListener(e -> mostrarTela("TRANSAÇÕES"));
-        btnRelatorios.addActionListener(e -> mostrarTela("RELATORIOS"));
+        btnConfiguracoes.addActionListener(e -> mostrarTela("CONFIGURACOES"));
+        
+        if (temAcessoAdminSystem()) {
+            btnAdmiSystem.addActionListener(e -> mostrarTela("ADMISYSTEM"));
+        }
+        
+        if (temAcessoLogs()) {
+            btnLogs.addActionListener(e -> mostrarTela("LOGS"));
+        }
+        
         btnVoltar.addActionListener(e -> dispose());
         
         return panel;
@@ -375,7 +425,7 @@ public class MenuPrincipal extends JFrame {
             JOptionPane.QUESTION_MESSAGE);
         
         if (confirm == JOptionPane.YES_OPTION) {
-            System.exit(0);
+            dispose(); // Apenas fecha a janela, não o sistema
         }
     }
 }

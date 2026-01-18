@@ -13,6 +13,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import view.telas.MenuPrincipal;
+import view.telas.RelatoriosView;
 
 public class DashboardCard extends CardBase {
     
@@ -43,8 +44,29 @@ public class DashboardCard extends CardBase {
         // Painel superior - Cards de resumo
         JPanel panelResumo = criarPanelResumo();
         
-        // Painel central - Grid com contas e transações
-        JPanel panelCentral = new JPanel(new GridLayout(1, 2, 10, 0));
+        // Painel central com tabs - Contas/Transações e Relatórios
+        JTabbedPane tabbedPane = new JTabbedPane();
+        
+        // Aba 1: Contas e Transações (layout original)
+        JPanel panelDados = criarPainelDados();
+        tabbedPane.addTab("Contas e Transações", panelDados);
+        
+        // Aba 2: Relatórios Rápidos
+        JPanel panelRelatorios = criarPainelRelatorios();
+        tabbedPane.addTab("Relatórios", panelRelatorios);
+        
+        // Painel inferior - Botões rápidos
+        JPanel panelBotoesRapidos = criarPanelBotoesRapidos();
+        
+        // Adicionando componentes
+        add(panelResumo, BorderLayout.NORTH);
+        add(tabbedPane, BorderLayout.CENTER);
+        add(panelBotoesRapidos, BorderLayout.SOUTH);
+    }
+    
+    private JPanel criarPainelDados() {
+        JPanel panel = new JPanel(new GridLayout(1, 2, 10, 0));
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         
         // Painel de Contas
         JPanel panelContas = criarPanelContas();
@@ -52,16 +74,124 @@ public class DashboardCard extends CardBase {
         // Painel de Transações Recentes
         JPanel panelTransacoes = criarPanelTransacoes();
         
-        panelCentral.add(panelContas);
-        panelCentral.add(panelTransacoes);
+        panel.add(panelContas);
+        panel.add(panelTransacoes);
         
-        // Painel inferior - Botões rápidos
-        JPanel panelBotoesRapidos = criarPanelBotoesRapidos();
+        return panel;
+    }
+    
+    private JPanel criarPainelRelatorios() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
-        // Adicionando componentes
-        add(panelResumo, BorderLayout.NORTH);
-        add(panelCentral, BorderLayout.CENTER);
-        add(panelBotoesRapidos, BorderLayout.SOUTH);
+        // Painel superior com instruções
+        JPanel panelInfo = new JPanel(new BorderLayout());
+        JLabel lblInfo = new JLabel("Visualize relatórios detalhados do período atual");
+        lblInfo.setFont(new Font("Arial", Font.ITALIC, 12));
+        lblInfo.setForeground(Color.DARK_GRAY);
+        panelInfo.add(lblInfo, BorderLayout.WEST);
+        
+        // Painel central com botões de ações
+        JPanel panelAcoes = new JPanel(new GridLayout(4, 1, 10, 15));
+        panelAcoes.setBorder(BorderFactory.createTitledBorder("Opções de Relatório"));
+        
+        // Botão: Visualizar Relatórios Completos
+        JButton btnVisualizarRelatorios = criarBotaoRelatorio(
+            "Visualizar Relatórios",
+            "Abrir tela de relatórios detalhada com gráficos e análises",
+            new Color(30, 136, 229)
+        );
+        btnVisualizarRelatorios.addActionListener(e -> abrirRelatorios());
+        
+        // Botão: Exportar para Excel
+        JButton btnExportar = criarBotaoRelatorio(
+            "Exportar para Excel",
+            "Baixar os dados financeiros em formato Excel (.xlsx)",
+            new Color(76, 175, 80)
+        );
+        btnExportar.addActionListener(e -> exportarExcel());
+        
+        // Botão: Imprimir
+        JButton btnImprimir = criarBotaoRelatorio(
+            "Imprimir Relatório",
+            "Imprimir o relatório financeiro do período",
+            new Color(255, 152, 0)
+        );
+        btnImprimir.addActionListener(e -> imprimirRelatorio());
+        
+        // Botão: Enviar por Email
+        JButton btnEmail = criarBotaoRelatorio(
+            "Enviar por Email",
+            "Enviar o relatório para o seu email registrado",
+            new Color(156, 39, 176)
+        );
+        btnEmail.addActionListener(e -> mostrarMensagemSucesso("Funcionalidade em desenvolvimento"));
+        
+        panelAcoes.add(btnVisualizarRelatorios);
+        panelAcoes.add(btnExportar);
+        panelAcoes.add(btnImprimir);
+        panelAcoes.add(btnEmail);
+        
+        panel.add(panelInfo, BorderLayout.NORTH);
+        panel.add(panelAcoes, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private JButton criarBotaoRelatorio(String titulo, String descricao, Color cor) {
+        JButton botao = new JButton() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(cor);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                super.paintComponent(g);
+            }
+        };
+        
+        botao.setLayout(new BorderLayout());
+        botao.setContentAreaFilled(false);
+        botao.setBorderPainted(false);
+        botao.setFocusPainted(false);
+        botao.setOpaque(false);
+        
+        JPanel panelConteudo = new JPanel(new GridLayout(2, 1, 0, 5));
+        panelConteudo.setOpaque(false);
+        panelConteudo.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        
+        JLabel lblTitulo = new JLabel(titulo);
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 14));
+        lblTitulo.setForeground(Color.WHITE);
+        
+        JLabel lblDescricao = new JLabel(descricao);
+        lblDescricao.setFont(new Font("Arial", Font.PLAIN, 11));
+        lblDescricao.setForeground(new Color(220, 220, 220));
+        
+        panelConteudo.add(lblTitulo);
+        panelConteudo.add(lblDescricao);
+        
+        botao.add(panelConteudo, BorderLayout.CENTER);
+        botao.setPreferredSize(new Dimension(400, 60));
+        
+        return botao;
+    }
+    
+    private void abrirRelatorios() {
+        RelatoriosView relatorios = new RelatoriosView(usuarioId);
+        relatorios.setVisible(true);
+    }
+    
+    private void exportarExcel() {
+        mostrarMensagemSucesso("Relatório sendo exportado...");
+        // Esta funcionalidade já está implementada em RelatoriosView
+        // Aqui apenas abrimos os relatórios
+        abrirRelatorios();
+    }
+    
+    private void imprimirRelatorio() {
+        mostrarMensagemSucesso("Abrindo função de impressão...");
+        abrirRelatorios();
     }
     
     private JPanel criarPanelResumo() {

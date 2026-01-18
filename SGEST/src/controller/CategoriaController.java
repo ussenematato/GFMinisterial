@@ -2,16 +2,29 @@ package controller;
 
 import model.entity.Categoria;
 import model.dao.CategoriaDAO;
+import model.dao.UsuarioDAO;
 import java.sql.SQLException;
 import java.util.List;
 
 public class CategoriaController {
     private CategoriaDAO categoriaDAO;
+    private LogController logController;
+    private UsuarioDAO usuarioDAO;
     private Integer usuarioLogadoId;
     
     public CategoriaController(Integer usuarioLogadoId) {
         this.categoriaDAO = new CategoriaDAO();
+        this.logController = new LogController();
+        this.usuarioDAO = new UsuarioDAO();
         this.usuarioLogadoId = usuarioLogadoId;
+    }
+    
+    private String obterNomeUsuario() {
+        try {
+            return usuarioDAO.buscarPorId(usuarioLogadoId).getNome();
+        } catch (SQLException e) {
+            return "Usuário Desconhecido";
+        }
     }
     
     // Operações de negócio
@@ -24,9 +37,13 @@ public class CategoriaController {
             Categoria categoria = new Categoria(nome.trim(), tipo.toUpperCase(), 
                                                descricao, usuarioLogadoId, cor);
             categoriaDAO.criar(categoria);
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "CRIAR", 
+                "Nova categoria criada: " + nome + " (" + tipo + ")", "Categoria", categoria.getId());
             return true;
         } catch (SQLException | IllegalArgumentException e) {
             System.err.println("Erro ao criar categoria: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "CRIAR", 
+                "Falha ao criar categoria: " + e.getMessage(), "Categoria", null, "FALHA");
             return false;
         }
     }
@@ -44,9 +61,13 @@ public class CategoriaController {
             categoria.setCor(cor);
             
             categoriaDAO.atualizar(categoria);
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "ATUALIZAR", 
+                "Categoria atualizada: " + nome, "Categoria", id);
             return true;
         } catch (SQLException e) {
             System.err.println("Erro ao atualizar categoria: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "ATUALIZAR", 
+                "Falha ao atualizar categoria: " + e.getMessage(), "Categoria", id, "FALHA");
             return false;
         }
     }
@@ -59,9 +80,13 @@ public class CategoriaController {
             }
             
             categoriaDAO.desativar(id);
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "DELETAR", 
+                "Categoria desativada: " + categoria.getNome(), "Categoria", id);
             return true;
         } catch (SQLException e) {
             System.err.println("Erro ao desativar categoria: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "DELETAR", 
+                "Falha ao desativar categoria: " + e.getMessage(), "Categoria", id, "FALHA");
             return false;
         }
     }

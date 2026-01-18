@@ -4,15 +4,12 @@ import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        // Configurar Look and Feel (FlatLaf)
+        // Configurar Look and Feel - usar padrão do sistema
         try {
-            com.formdev.flatlaf.FlatLightLaf.setup();
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            // Usar L&F padrão em caso de erro
+            e.printStackTrace();
         }
         
         SwingUtilities.invokeLater(() -> {

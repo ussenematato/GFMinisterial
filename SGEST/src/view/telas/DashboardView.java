@@ -398,7 +398,8 @@ public class DashboardView extends JFrame {
             JOptionPane.YES_NO_OPTION);
         
         if (confirm == JOptionPane.YES_OPTION) {
-            System.exit(0);
+            LoginView login = new LoginView();
+            login.setVisible(true);
         }
     }
     

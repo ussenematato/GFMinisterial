@@ -3,6 +3,7 @@ package controller;
 import model.entity.Transacao;
 import model.dao.TransacaoDAO;
 import model.dao.ContaDAO;
+import model.dao.UsuarioDAO;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -13,12 +14,24 @@ public class TransacaoController {
 
     private TransacaoDAO transacaoDAO;
     private ContaDAO contaDAO;
+    private LogController logController;
+    private UsuarioDAO usuarioDAO;
     private Integer usuarioLogadoId;
 
     public TransacaoController(Integer usuarioLogadoId) {
         this.transacaoDAO = new TransacaoDAO();
         this.contaDAO = new ContaDAO();
+        this.logController = new LogController();
+        this.usuarioDAO = new UsuarioDAO();
         this.usuarioLogadoId = usuarioLogadoId;
+    }
+
+    private String obterNomeUsuario() {
+        try {
+            return usuarioDAO.buscarPorId(usuarioLogadoId).getNome();
+        } catch (SQLException e) {
+            return "Usuário Desconhecido";
+        }
     }
 
     // Operações de negócio
@@ -46,6 +59,8 @@ public class TransacaoController {
             transacao.setPago("RECEITA".equalsIgnoreCase(tipo)); // Receitas são pagas automaticamente
 
             transacaoDAO.criar(transacao);
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "CRIAR", 
+                "Transação registrada: " + descricao + " (" + tipo + ") - " + valor, "Transacao", transacao.getId());
 
             // Atualizar saldo da conta
             // Para RECEITA: deduz imediatamente (pago automaticamente)
@@ -57,6 +72,8 @@ public class TransacaoController {
             return true;
         } catch (SQLException | IllegalArgumentException | IllegalStateException e) {
             System.err.println("Erro ao registrar transação: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "CRIAR", 
+                "Falha ao registrar transação: " + e.getMessage(), "Transacao", null, "FALHA");
             return false;
         }
     }
@@ -89,6 +106,8 @@ public class TransacaoController {
             transacao.setObservacoes(observacoes);
 
             transacaoDAO.atualizar(transacao);
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "ATUALIZAR", 
+                "Transação atualizada: " + descricao, "Transacao", id);
 
             // Aplicar novo saldo (apenas se transação está paga ou é receita)
             if ("RECEITA".equals(transacao.getTipo()) || transacaoAntigaPaga) {
@@ -98,6 +117,8 @@ public class TransacaoController {
             return true;
         } catch (SQLException e) {
             System.err.println("Erro ao atualizar transação: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "ATUALIZAR", 
+                "Falha ao atualizar transação: " + e.getMessage(), "Transacao", id, "FALHA");
             return false;
         }
     }
@@ -116,9 +137,13 @@ public class TransacaoController {
             }
 
             transacaoDAO.excluir(id);
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "DELETAR", 
+                "Transação deletada: " + transacao.getDescricao(), "Transacao", id);
             return true;
         } catch (SQLException e) {
             System.err.println("Erro ao excluir transação: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "DELETAR", 
+                "Falha ao deletar transação: " + e.getMessage(), "Transacao", id, "FALHA");
             return false;
         }
     }
@@ -132,6 +157,8 @@ public class TransacaoController {
 
             if (!transacao.getPago()) {
                 transacaoDAO.marcarComoPago(id);
+                logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "ATUALIZAR", 
+                    "Transação marcada como paga: " + transacao.getDescricao(), "Transacao", id);
 
                 // Atualizar saldo APENAS para despesas quando marcadas como pagas
                 // Receitas já foram contabilizadas ao criar
@@ -143,6 +170,8 @@ public class TransacaoController {
             return true;
         } catch (SQLException e) {
             System.err.println("Erro ao marcar como pago: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "ATUALIZAR", 
+                "Falha ao marcar como pago: " + e.getMessage(), "Transacao", id, "FALHA");
             return false;
         }
     }
@@ -330,6 +359,54 @@ public class TransacaoController {
             return transacaoDAO.obterReceitasPorCategoria(usuarioLogadoId, inicio, fim);
         } catch (SQLException e) {
             System.err.println("Erro ao obter receitas por categoria: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    // Métodos para TODAS as transações (compartilhadas entre usuários)
+    public List<Transacao> listarTodasTransacoesPeriodo(LocalDate inicio, LocalDate fim) {
+        try {
+            return transacaoDAO.listarTodasTransacoes(inicio, fim);
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar todas as transações: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    public BigDecimal obterTotalTodasReceitas(LocalDate inicio, LocalDate fim) {
+        try {
+            Double total = transacaoDAO.obterTotalTodosReceitas(inicio, fim);
+            return BigDecimal.valueOf(total != null ? total : 0.0);
+        } catch (SQLException e) {
+            System.err.println("Erro ao obter total de receitas: " + e.getMessage());
+            return BigDecimal.ZERO;
+        }
+    }
+
+    public BigDecimal obterTotalTodasDespesas(LocalDate inicio, LocalDate fim) {
+        try {
+            Double total = transacaoDAO.obterTotalTodasDespesas(inicio, fim);
+            return BigDecimal.valueOf(total != null ? total : 0.0);
+        } catch (SQLException e) {
+            System.err.println("Erro ao obter total de despesas: " + e.getMessage());
+            return BigDecimal.ZERO;
+        }
+    }
+
+    public List<Object[]> obterTodasReceitasPorCategoria(LocalDate inicio, LocalDate fim) {
+        try {
+            return transacaoDAO.obterTodasReceitas(inicio, fim);
+        } catch (SQLException e) {
+            System.err.println("Erro ao obter receitas por categoria: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    public List<Object[]> obterTodasDespesasPorCategoria(LocalDate inicio, LocalDate fim) {
+        try {
+            return transacaoDAO.obterTodasDespesas(inicio, fim);
+        } catch (SQLException e) {
+            System.err.println("Erro ao obter despesas por categoria: " + e.getMessage());
             return List.of();
         }
     }

@@ -2,17 +2,30 @@ package controller;
 
 import model.entity.Conta;
 import model.dao.ContaDAO;
+import model.dao.UsuarioDAO;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 
 public class ContaController {
     private ContaDAO contaDAO;
+    private LogController logController;
+    private UsuarioDAO usuarioDAO;
     private Integer usuarioLogadoId;
     
     public ContaController(Integer usuarioLogadoId) {
         this.contaDAO = new ContaDAO();
+        this.logController = new LogController();
+        this.usuarioDAO = new UsuarioDAO();
         this.usuarioLogadoId = usuarioLogadoId;
+    }
+    
+    private String obterNomeUsuario() {
+        try {
+            return usuarioDAO.buscarPorId(usuarioLogadoId).getNome();
+        } catch (SQLException e) {
+            return "Usuário Desconhecido";
+        }
     }
     
     // Operações de negócio
@@ -20,9 +33,13 @@ public class ContaController {
         try {
             Conta conta = new Conta(nome, tipo, saldoInicial, instituicao, usuarioLogadoId);
             contaDAO.criar(conta);
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "CRIAR", 
+                "Nova conta criada: " + nome + " (" + tipo + ")", "Conta", conta.getId());
             return true;
         } catch (SQLException e) {
             System.err.println("Erro ao criar conta: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "CRIAR", 
+                "Falha ao criar conta: " + e.getMessage(), "Conta", null, "FALHA");
             return false;
         }
     }
@@ -40,9 +57,13 @@ public class ContaController {
             conta.setInstituicao(instituicao);
             
             contaDAO.atualizar(conta);
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "ATUALIZAR", 
+                "Conta atualizada: " + nome, "Conta", id);
             return true;
         } catch (SQLException e) {
             System.err.println("Erro ao atualizar conta: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "ATUALIZAR", 
+                "Falha ao atualizar conta: " + e.getMessage(), "Conta", id, "FALHA");
             return false;
         }
     }
@@ -55,9 +76,13 @@ public class ContaController {
             }
             
             contaDAO.desativar(id);
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "DELETAR", 
+                "Conta desativada: " + conta.getNome(), "Conta", id);
             return true;
         } catch (SQLException e) {
             System.err.println("Erro ao desativar conta: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "DELETAR", 
+                "Falha ao desativar conta: " + e.getMessage(), "Conta", id, "FALHA");
             return false;
         }
     }
@@ -120,6 +145,25 @@ public class ContaController {
     public BigDecimal obterSaldoTotal() {
         try {
             return contaDAO.obterSaldoTotalPorUsuario(usuarioLogadoId);
+        } catch (SQLException e) {
+            System.err.println("Erro ao obter saldo total: " + e.getMessage());
+            return BigDecimal.ZERO;
+        }
+    }
+
+    // Métodos para TODAS as contas (compartilhadas entre usuários)
+    public List<Conta> listarTodasContas() {
+        try {
+            return contaDAO.listarTodasContas();
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar todas as contas: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    public BigDecimal obterSaldoTotalTodas() {
+        try {
+            return contaDAO.obterSaldoTotalTodas();
         } catch (SQLException e) {
             System.err.println("Erro ao obter saldo total: " + e.getMessage());
             return BigDecimal.ZERO;

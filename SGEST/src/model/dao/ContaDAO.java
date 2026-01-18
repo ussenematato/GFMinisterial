@@ -148,4 +148,33 @@ public class ContaDAO {
         conta.setDataCriacao(rs.getTimestamp("data_criacao").toLocalDateTime());
         return conta;
     }
+
+    // Métodos para listar TODAS as contas (compartilhadas entre usuários)
+    public List<Conta> listarTodasContas() throws SQLException {
+        List<Conta> contas = new ArrayList<>();
+        String sql = "SELECT * FROM contas WHERE ativo = TRUE ORDER BY nome";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                contas.add(mapearConta(rs));
+            }
+        }
+        return contas;
+    }
+
+    public BigDecimal obterSaldoTotalTodas() throws SQLException {
+        String sql = "SELECT SUM(saldo_atual) as total FROM contas WHERE ativo = TRUE";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                BigDecimal total = rs.getBigDecimal("total");
+                return total != null ? total : BigDecimal.ZERO;
+            }
+        }
+        return BigDecimal.ZERO;
+    }
 }

@@ -33,6 +33,7 @@ public class RelatoriosView extends JDialog {
     private Integer usuarioId;
     private TransacaoController transacaoController;
     private ContaController contaController;
+    private boolean mostrarTodos = true; // Mostrar dados de todos os usuários
     
     // Componentes de filtro
     private JComboBox<String> cmbPeriodo;
@@ -66,6 +67,7 @@ public class RelatoriosView extends JDialog {
         add(panelFiltros, BorderLayout.NORTH);
         
         tabbedPane = new JTabbedPane();
+        tabbedPane.setTabPlacement(JTabbedPane.TOP);
         
         // Aba 1: Detalhamento Completo (Receitas, Despesas, Saldos)
         tabbedPane.addTab("Detalhamento Completo", criarPainelDetalhamentoCompleto());
@@ -103,7 +105,7 @@ public class RelatoriosView extends JDialog {
         panelBotoes.add(btnFechar);
         add(panelBotoes, BorderLayout.SOUTH);
         
-        setSize(1200, 800);
+        setSize(1100, 700);
         setLocationRelativeTo(null);
     }
     
@@ -176,14 +178,54 @@ public class RelatoriosView extends JDialog {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
+        // Painel superior com texto
+        JPanel panelTexto = new JPanel(new BorderLayout());
         txtDetalhamentoCompleto = new JTextArea();
         txtDetalhamentoCompleto.setEditable(false);
         txtDetalhamentoCompleto.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 11));
         
-        JScrollPane scrollPane = new JScrollPane(txtDetalhamentoCompleto);
-        scrollPane.setPreferredSize(new Dimension(800, 600));
+        JScrollPane scrollTexto = new JScrollPane(txtDetalhamentoCompleto);
+        scrollTexto.setPreferredSize(new Dimension(800, 300));
+        panelTexto.add(scrollTexto, BorderLayout.CENTER);
         
-        panel.add(scrollPane, BorderLayout.CENTER);
+        // Painel inferior com tabela de contas
+        JPanel panelContas = new JPanel(new BorderLayout());
+        panelContas.setBorder(BorderFactory.createTitledBorder("Saldo das Contas"));
+        
+        // Criar tabela de contas
+        String[] colunasContas = {"ID", "Conta", "Tipo", "Instituição", "Saldo Atual"};
+        DefaultTableModel modeloContas = new DefaultTableModel(colunasContas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        JTable tabelaContas = new JTable(modeloContas);
+        tabelaContas.setFont(new Font("Arial", Font.PLAIN, 11));
+        tabelaContas.getTableHeader().setFont(new Font("Arial", Font.BOLD, 11));
+        tabelaContas.setRowHeight(25);
+        
+        // Carregar dados de contas
+        List<model.entity.Conta> contas = contaController.listarContasAtivas();
+        for (model.entity.Conta conta : contas) {
+            Object[] row = {
+                conta.getId(),
+                conta.getNome(),
+                conta.getTipo(),
+                conta.getInstituicao(),
+                CurrencyUtils.formatCurrency(conta.getSaldoAtual())
+            };
+            modeloContas.addRow(row);
+        }
+        
+        JScrollPane scrollContas = new JScrollPane(tabelaContas);
+        scrollContas.setPreferredSize(new Dimension(800, 150));
+        panelContas.add(scrollContas, BorderLayout.CENTER);
+        
+        // Adicionar ao painel principal
+        panel.add(panelTexto, BorderLayout.CENTER);
+        panel.add(panelContas, BorderLayout.SOUTH);
         
         // Carregar dados
         atualizarDetalhamentoCompleto();
@@ -206,7 +248,9 @@ public class RelatoriosView extends JDialog {
         sb.append("│ RECEITAS                                                                   │\n");
         sb.append("├────────────────────────────────────────────────────────────────────────────┤\n");
         
-        List<Object[]> receitas = transacaoController.obterReceitasPorCategoria(dataInicio, dataFim);
+        List<Object[]> receitas = mostrarTodos 
+            ? transacaoController.obterTodasReceitasPorCategoria(dataInicio, dataFim)
+            : transacaoController.obterReceitasPorCategoria(dataInicio, dataFim);
         BigDecimal totalReceitas = BigDecimal.ZERO;
         
         if (receitas.isEmpty()) {
@@ -236,7 +280,9 @@ public class RelatoriosView extends JDialog {
         sb.append("│ DESPESAS                                                                   │\n");
         sb.append("├────────────────────────────────────────────────────────────────────────────┤\n");
         
-        List<Object[]> despesas = transacaoController.obterDespesasPorCategoria(dataInicio, dataFim);
+        List<Object[]> despesas = mostrarTodos 
+            ? transacaoController.obterTodasDespesasPorCategoria(dataInicio, dataFim)
+            : transacaoController.obterDespesasPorCategoria(dataInicio, dataFim);
         BigDecimal totalDespesas = BigDecimal.ZERO;
         
         if (despesas.isEmpty()) {
@@ -283,13 +329,20 @@ public class RelatoriosView extends JDialog {
     }
     
     private JPanel criarPainelResumoGeral() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        JPanel panel = new JPanel(new BorderLayout(15, 15));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Obter dados
-        BigDecimal receitas = transacaoController.obterTotalReceitas(dataInicio, dataFim);
-        BigDecimal despesas = transacaoController.obterTotalDespesas(dataInicio, dataFim);
+        // Obter dados - usando métodos que retornam TODOS os dados
+        BigDecimal receitas = mostrarTodos 
+            ? transacaoController.obterTotalTodasReceitas(dataInicio, dataFim)
+            : transacaoController.obterTotalReceitas(dataInicio, dataFim);
+        BigDecimal despesas = mostrarTodos 
+            ? transacaoController.obterTotalTodasDespesas(dataInicio, dataFim)
+            : transacaoController.obterTotalDespesas(dataInicio, dataFim);
         BigDecimal saldoMes = receitas.subtract(despesas);
-        BigDecimal saldoTotal = contaController.obterSaldoTotal();
+        BigDecimal saldoTotal = mostrarTodos 
+            ? contaController.obterSaldoTotalTodas()
+            : contaController.obterSaldoTotal();
         
         // Criar dataset para gráfico de pizza
         DefaultPieDataset dataset = new DefaultPieDataset();
@@ -306,63 +359,102 @@ public class RelatoriosView extends JDialog {
         );
         
         ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(500, 300));
+        chartPanel.setPreferredSize(new Dimension(600, 350));
         
-        // Painel de estatísticas
-        JPanel panelStats = new JPanel(new GridLayout(5, 1, 10, 15));
-        panelStats.setBorder(BorderFactory.createTitledBorder("Resumo Período"));
-        panelStats.setPreferredSize(new Dimension(400, 400));
+        // Painel de estatísticas - Layout melhorado
+        JPanel panelStats = new JPanel(new GridBagLayout());
+        panelStats.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder("Resumo do Período"),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 10, 8, 10);
+        gbc.weightx = 1;
         
         // Receitas
-        JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel lblReceitas = new JLabel(CurrencyUtils.formatCurrency(receitas));
-        lblReceitas.setForeground(new java.awt.Color(0, 150, 0));
-        lblReceitas.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 16));
-        p1.add(new JLabel("Total Receitas:"));
-        p1.add(lblReceitas);
-        panelStats.add(p1);
+        JLabel lblReceitas = new JLabel("Total Receitas:");
+        lblReceitas.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 13));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panelStats.add(lblReceitas, gbc);
+        
+        JLabel valReceitas = new JLabel(CurrencyUtils.formatCurrency(receitas));
+        valReceitas.setForeground(new java.awt.Color(0, 150, 0));
+        valReceitas.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
+        gbc.gridx = 1;
+        panelStats.add(valReceitas, gbc);
         
         // Despesas
-        JPanel p2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel lblDespesas = new JLabel(CurrencyUtils.formatCurrency(despesas));
-        lblDespesas.setForeground(new java.awt.Color(200, 0, 0));
-        lblDespesas.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 16));
-        p2.add(new JLabel("Total Despesas:"));
-        p2.add(lblDespesas);
-        panelStats.add(p2);
+        JLabel lblDespesas = new JLabel("Total Despesas:");
+        lblDespesas.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 13));
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panelStats.add(lblDespesas, gbc);
         
-        // Saldo do período
-        JPanel p3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel lblSaldoMes = new JLabel(CurrencyUtils.formatCurrency(saldoMes));
-        if (saldoMes.compareTo(BigDecimal.ZERO) >= 0) {
-            lblSaldoMes.setForeground(new java.awt.Color(0, 150, 0));
-        } else {
-            lblSaldoMes.setForeground(new java.awt.Color(200, 0, 0));
-        }
-        lblSaldoMes.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 16));
-        p3.add(new JLabel("Saldo do Período:"));
-        p3.add(lblSaldoMes);
-        panelStats.add(p3);
+        JLabel valDespesas = new JLabel(CurrencyUtils.formatCurrency(despesas));
+        valDespesas.setForeground(new java.awt.Color(200, 0, 0));
+        valDespesas.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
+        gbc.gridx = 1;
+        panelStats.add(valDespesas, gbc);
         
         // Separador
-        JPanel sep = new JPanel();
-        sep.setBorder(BorderFactory.createLineBorder(java.awt.Color.GRAY));
-        panelStats.add(sep);
+        JSeparator sep1 = new JSeparator(JSeparator.HORIZONTAL);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        panelStats.add(sep1, gbc);
+        gbc.gridwidth = 1;
+        
+        // Saldo do período
+        JLabel lblSaldoMes = new JLabel("Saldo do Período:");
+        lblSaldoMes.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 13));
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        panelStats.add(lblSaldoMes, gbc);
+        
+        JLabel valSaldoMes = new JLabel(CurrencyUtils.formatCurrency(saldoMes));
+        if (saldoMes.compareTo(BigDecimal.ZERO) >= 0) {
+            valSaldoMes.setForeground(new java.awt.Color(0, 150, 0));
+        } else {
+            valSaldoMes.setForeground(new java.awt.Color(200, 0, 0));
+        }
+        valSaldoMes.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
+        gbc.gridx = 1;
+        panelStats.add(valSaldoMes, gbc);
+        
+        // Separador
+        JSeparator sep2 = new JSeparator(JSeparator.HORIZONTAL);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        panelStats.add(sep2, gbc);
+        gbc.gridwidth = 1;
         
         // Saldo total
-        JPanel p4 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel lblSaldoTotal = new JLabel(CurrencyUtils.formatCurrency(saldoTotal));
-        lblSaldoTotal.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
-        if (saldoTotal.compareTo(BigDecimal.ZERO) >= 0) {
-            lblSaldoTotal.setForeground(new java.awt.Color(0, 100, 0));
-        } else {
-            lblSaldoTotal.setForeground(new java.awt.Color(200, 0, 0));
-        }
-        p4.add(new JLabel("Saldo Total:"));
-        p4.add(lblSaldoTotal);
-        panelStats.add(p4);
+        JLabel lblSaldoTotal = new JLabel("Saldo Total de Contas:");
+        lblSaldoTotal.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 13));
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        panelStats.add(lblSaldoTotal, gbc);
         
-        // Layout
+        JLabel valSaldoTotal = new JLabel(CurrencyUtils.formatCurrency(saldoTotal));
+        valSaldoTotal.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 15));
+        if (saldoTotal.compareTo(BigDecimal.ZERO) >= 0) {
+            valSaldoTotal.setForeground(new java.awt.Color(0, 100, 0));
+        } else {
+            valSaldoTotal.setForeground(new java.awt.Color(200, 0, 0));
+        }
+        gbc.gridx = 1;
+        panelStats.add(valSaldoTotal, gbc);
+        
+        // Spacer
+        gbc.gridy = 6;
+        gbc.weighty = 1;
+        panelStats.add(new JLabel(), gbc);
+        
+        // Layout - Gráfico ocupa mais espaço
         panel.add(chartPanel, BorderLayout.CENTER);
         panel.add(panelStats, BorderLayout.EAST);
         
@@ -370,9 +462,12 @@ public class RelatoriosView extends JDialog {
     }
     
     private JPanel criarPainelDespesasCategoria() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(15, 15));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        List<Object[]> dados = transacaoController.obterDespesasPorCategoria(dataInicio, dataFim);
+        List<Object[]> dados = mostrarTodos 
+            ? transacaoController.obterTodasDespesasPorCategoria(dataInicio, dataFim)
+            : transacaoController.obterDespesasPorCategoria(dataInicio, dataFim);
         
         DefaultPieDataset dataset = new DefaultPieDataset();
         for (Object[] linha : dados) {
@@ -392,9 +487,14 @@ public class RelatoriosView extends JDialog {
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(600, 400));
         
-        // Tabela de detalhes
+        // Tabela de detalhes com melhor layout
         String[] colunas = {"Categoria", "Valor", "Percentual"};
-        DefaultTableModel model = new DefaultTableModel(colunas, 0);
+        DefaultTableModel model = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) {
+                return false;
+            }
+        };
         
         double total = dados.stream().mapToDouble(d -> (Double) d[1]).sum();
         
@@ -412,11 +512,21 @@ public class RelatoriosView extends JDialog {
         }
         
         JTable tabela = new JTable(model);
-        tabela.setRowHeight(25);
+        tabela.setRowHeight(28);
         tabela.setShowGrid(true);
         tabela.setGridColor(new Color(220, 220, 220));
+        tabela.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        tabela.setFont(new Font("Arial", Font.PLAIN, 11));
+        
+        // Renderizador para valores monetários
+        tabela.getColumnModel().getColumn(1).setCellRenderer(new javax.swing.table.DefaultTableCellRenderer() {
+            {
+                setHorizontalAlignment(SwingConstants.RIGHT);
+            }
+        });
+        
         JScrollPane scrollPane = new JScrollPane(tabela);
-        scrollPane.setPreferredSize(new Dimension(400, 300));
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Detalhamento por Categoria"));
         
         panel.add(chartPanel, BorderLayout.CENTER);
         panel.add(scrollPane, BorderLayout.EAST);
@@ -609,9 +719,38 @@ public class RelatoriosView extends JDialog {
         saldoTotalRow.createCell(1).setCellValue(saldoTotal.doubleValue());
         saldoTotalRow.getCell(1).setCellStyle(currencyStyle);
         
+        // CONTAS
+        rowNum = rowNum + 6;
+        Row contasHeader = sheet.createRow(rowNum);
+        contasHeader.createCell(0).setCellValue("SALDO DAS CONTAS");
+        contasHeader.getCell(0).setCellStyle(titleStyle);
+        
+        rowNum++;
+        Row colHeaderContas = sheet.createRow(rowNum);
+        colHeaderContas.createCell(0).setCellValue("Conta");
+        colHeaderContas.createCell(1).setCellValue("Tipo");
+        colHeaderContas.createCell(2).setCellValue("Instituição");
+        colHeaderContas.createCell(3).setCellValue("Saldo");
+        for (int i = 0; i < 4; i++) {
+            colHeaderContas.getCell(i).setCellStyle(headerStyle);
+        }
+        
+        List<model.entity.Conta> contas = contaController.listarContasAtivas();
+        rowNum++;
+        for (model.entity.Conta conta : contas) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(conta.getNome());
+            row.createCell(1).setCellValue(conta.getTipo());
+            row.createCell(2).setCellValue(conta.getInstituicao());
+            row.createCell(3).setCellValue(conta.getSaldoAtual().doubleValue());
+            row.getCell(3).setCellStyle(currencyStyle);
+        }
+        
         // Ajustar largura das colunas
         sheet.setColumnWidth(0, 5000);
         sheet.setColumnWidth(1, 3000);
+        sheet.setColumnWidth(2, 3000);
+        sheet.setColumnWidth(3, 3000);
         
         // Escrever arquivo com try-with-resources para garantir fechamento adequado
         try (FileOutputStream out = new FileOutputStream(arquivo)) {

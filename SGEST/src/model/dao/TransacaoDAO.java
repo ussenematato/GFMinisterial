@@ -300,4 +300,111 @@ public class TransacaoDAO {
         }
         return resultados;
     }
+
+    // Métodos para listar TODAS as transações (compartilhadas entre usuários)
+    public List<Transacao> listarTodasTransacoes(LocalDate inicio, LocalDate fim) throws SQLException {
+        List<Transacao> transacoes = new ArrayList<>();
+        String sql = "SELECT t.*, c.nome as nome_conta, cat.nome as nome_categoria, cat.cor as cor_categoria "
+                + "FROM transacoes t "
+                + "LEFT JOIN contas c ON t.conta_id = c.id "
+                + "LEFT JOIN categorias cat ON t.categoria_id = cat.id "
+                + "WHERE t.data_transacao BETWEEN ? AND ? "
+                + "ORDER BY t.data_transacao DESC, t.id DESC";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(inicio));
+            stmt.setDate(2, Date.valueOf(fim));
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                transacoes.add(mapearTransacao(rs));
+            }
+        }
+        return transacoes;
+    }
+
+    public List<Object[]> obterTodasReceitas(LocalDate inicio, LocalDate fim) throws SQLException {
+        List<Object[]> resultados = new ArrayList<>();
+        String sql = "SELECT cat.nome, SUM(t.valor) as total, COUNT(t.id) as quantidade "
+                + "FROM transacoes t "
+                + "JOIN categorias cat ON t.categoria_id = cat.id "
+                + "WHERE t.tipo = 'RECEITA' "
+                + "AND t.data_transacao BETWEEN ? AND ? "
+                + "GROUP BY cat.nome "
+                + "ORDER BY total DESC";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(inicio));
+            stmt.setDate(2, Date.valueOf(fim));
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Object[] linha = new Object[2];
+                String nomeCategoria = rs.getString("nome");
+                linha[0] = nomeCategoria != null ? nomeCategoria : "Sem Categoria";
+                linha[1] = rs.getDouble("total");
+                resultados.add(linha);
+            }
+        }
+        return resultados;
+    }
+
+    public List<Object[]> obterTodasDespesas(LocalDate inicio, LocalDate fim) throws SQLException {
+        List<Object[]> resultados = new ArrayList<>();
+        String sql = "SELECT cat.nome, SUM(t.valor) as total, COUNT(t.id) as quantidade "
+                + "FROM transacoes t "
+                + "JOIN categorias cat ON t.categoria_id = cat.id "
+                + "WHERE t.tipo = 'DESPESA' "
+                + "AND t.data_transacao BETWEEN ? AND ? "
+                + "GROUP BY cat.nome "
+                + "ORDER BY total DESC";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(inicio));
+            stmt.setDate(2, Date.valueOf(fim));
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Object[] linha = new Object[2];
+                String nomeCategoria = rs.getString("nome");
+                linha[0] = nomeCategoria != null ? nomeCategoria : "Sem Categoria";
+                linha[1] = rs.getDouble("total");
+                resultados.add(linha);
+            }
+        }
+        return resultados;
+    }
+
+    public Double obterTotalTodosReceitas(LocalDate inicio, LocalDate fim) throws SQLException {
+        String sql = "SELECT SUM(valor) as total FROM transacoes "
+                + "WHERE tipo = 'RECEITA' AND data_transacao BETWEEN ? AND ?";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(inicio));
+            stmt.setDate(2, Date.valueOf(fim));
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("total");
+            }
+        }
+        return 0.0;
+    }
+
+    public Double obterTotalTodasDespesas(LocalDate inicio, LocalDate fim) throws SQLException {
+        String sql = "SELECT SUM(valor) as total FROM transacoes "
+                + "WHERE tipo = 'DESPESA' AND data_transacao BETWEEN ? AND ?";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(inicio));
+            stmt.setDate(2, Date.valueOf(fim));
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("total");
+            }
+        }
+        return 0.0;
+    }
 }

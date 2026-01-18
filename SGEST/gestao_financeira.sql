@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 16/01/2026 às 17:09
+-- Tempo de geração: 18/01/2026 às 16:31
 -- Versão do servidor: 10.4.28-MariaDB
 -- Versão do PHP: 8.0.28
 
@@ -81,6 +81,24 @@ INSERT INTO `contas` (`id`, `nome`, `tipo`, `saldo_inicial`, `saldo_atual`, `ins
 (2, 'Fundo de Maneio', 'CARTEIRA', 500.00, 2000.00, 'Dinheiro físico', 1, 1, '2026-01-09 14:24:24'),
 (3, 'MPesa', 'CARTEIRA', 10000.00, 500.00, 'Vodacom, SA', 1, 1, '2026-01-09 14:24:24'),
 (4, 'E-Mola', 'CARTEIRA', 500.00, 300.00, 'Movitel', 1, 1, '2026-01-15 15:41:55');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `logs`
+--
+
+CREATE TABLE `logs` (
+  `id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `nome_usuario` varchar(255) NOT NULL,
+  `operacao` varchar(50) NOT NULL COMMENT 'CRIAR, ATUALIZAR, DELETAR, VISUALIZAR',
+  `descricao` text DEFAULT NULL COMMENT 'Detalhes da operação realizada',
+  `tabela` varchar(50) DEFAULT NULL COMMENT 'Nome da tabela afetada',
+  `registro_id` int(11) DEFAULT NULL COMMENT 'ID do registro afetado',
+  `data_hora` datetime DEFAULT current_timestamp() COMMENT 'Data e hora da operação',
+  `status_operacao` varchar(20) DEFAULT 'SUCESSO' COMMENT 'SUCESSO, FALHA, AVISO'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -164,6 +182,18 @@ ALTER TABLE `contas`
   ADD KEY `idx_usuario` (`usuario_id`);
 
 --
+-- Índices de tabela `logs`
+--
+ALTER TABLE `logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_usuario_id` (`usuario_id`),
+  ADD KEY `idx_operacao` (`operacao`),
+  ADD KEY `idx_data_hora` (`data_hora`),
+  ADD KEY `idx_tabela` (`tabela`),
+  ADD KEY `idx_usuario_data` (`usuario_id`,`data_hora`),
+  ADD KEY `idx_operacao_data` (`operacao`,`data_hora`);
+
+--
 -- Índices de tabela `transacoes`
 --
 ALTER TABLE `transacoes`
@@ -199,6 +229,12 @@ ALTER TABLE `contas`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT de tabela `logs`
+--
+ALTER TABLE `logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de tabela `transacoes`
 --
 ALTER TABLE `transacoes`
@@ -213,6 +249,12 @@ ALTER TABLE `usuarios`
 --
 -- Restrições para tabelas despejadas
 --
+
+--
+-- Restrições para tabelas `logs`
+--
+ALTER TABLE `logs`
+  ADD CONSTRAINT `fk_log_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE;
 
 --
 -- Restrições para tabelas `transacoes`
