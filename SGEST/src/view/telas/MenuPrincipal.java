@@ -124,14 +124,13 @@ public class MenuPrincipal extends JFrame {
         JButton btnContas = new JButton("Contas");
         JButton btnCategorias = new JButton("Categorias");
         JButton btnTransacoes = new JButton("Transações");
-        JButton btnRelatorios = new JButton("Relatórios");
         JButton btnConfiguracoes = new JButton("Configurações");
         JButton btnAdmiSystem = new JButton("AdmiSystem");
         JButton btnLogs = new JButton("Gestão de Logs");
         JButton btnVoltar = new JButton("Voltar ao Dashboard");
         
         // Estilo dos botões usando UIStyler
-        for (JButton btn : new JButton[]{btnInicio, btnContas, btnCategorias, btnTransacoes, btnRelatorios, btnConfiguracoes}) {
+        for (JButton btn : new JButton[]{btnInicio, btnContas, btnCategorias, btnTransacoes, btnConfiguracoes}) {
             UIStyler.styleSecondaryButton(btn);
         }
         UIStyler.styleDangerButton(btnAdmiSystem); // Destacar como acesso crítico
@@ -142,7 +141,6 @@ public class MenuPrincipal extends JFrame {
         panel.add(btnContas);
         panel.add(btnCategorias);
         panel.add(btnTransacoes);
-        panel.add(btnRelatorios);
         panel.add(btnConfiguracoes);
         
         // SuperAdmin tem acesso a TUDO - AdminSystem e Logs
@@ -162,7 +160,6 @@ public class MenuPrincipal extends JFrame {
         btnContas.addActionListener(e -> mostrarTela("CONTAS"));
         btnCategorias.addActionListener(e -> mostrarTela("CATEGORIAS"));
         btnTransacoes.addActionListener(e -> mostrarTela("TRANSAÇÕES"));
-        btnRelatorios.addActionListener(e -> mostrarTela("RELATORIOS"));
         btnConfiguracoes.addActionListener(e -> mostrarTela("CONFIGURACOES"));
         
         if (temAcessoAdminSystem()) {

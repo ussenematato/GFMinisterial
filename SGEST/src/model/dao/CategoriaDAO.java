@@ -55,7 +55,7 @@ public class CategoriaDAO {
     
     public List<Categoria> listarPorUsuario(Integer usuarioId, String tipo) throws SQLException {
         List<Categoria> categorias = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM categorias WHERE usuario_id = ? AND ativo = TRUE");
+        StringBuilder sql = new StringBuilder("SELECT * FROM categorias WHERE ativo = TRUE");
         
         if (tipo != null && !tipo.isEmpty() && !tipo.equals("TODOS")) {
             sql.append(" AND tipo = ?");
@@ -63,9 +63,8 @@ public class CategoriaDAO {
         sql.append(" ORDER BY nome");
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql.toString())) {
-            stmt.setInt(1, usuarioId);
             if (tipo != null && !tipo.isEmpty() && !tipo.equals("TODOS")) {
-                stmt.setString(2, tipo);
+                stmt.setString(1, tipo);
             }
             
             ResultSet rs = stmt.executeQuery();
@@ -104,10 +103,9 @@ public class CategoriaDAO {
     
     public List<String> listarNomesPorUsuario(Integer usuarioId) throws SQLException {
         List<String> nomes = new ArrayList<>();
-        String sql = "SELECT nome FROM categorias WHERE usuario_id = ? AND ativo = TRUE ORDER BY nome";
+        String sql = "SELECT nome FROM categorias WHERE ativo = TRUE ORDER BY nome";
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
             ResultSet rs = stmt.executeQuery();
             
             while (rs.next()) {

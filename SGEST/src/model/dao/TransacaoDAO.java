@@ -73,13 +73,12 @@ public class TransacaoDAO {
                 + "FROM transacoes t "
                 + "LEFT JOIN contas c ON t.conta_id = c.id "
                 + "LEFT JOIN categorias cat ON t.categoria_id = cat.id "
-                + "WHERE t.usuario_id = ? AND t.data_transacao BETWEEN ? AND ? "
+                + "WHERE t.data_transacao BETWEEN ? AND ? "
                 + "ORDER BY t.data_transacao DESC, t.id DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
-            stmt.setDate(2, Date.valueOf(inicio));
-            stmt.setDate(3, Date.valueOf(fim));
+            stmt.setDate(1, Date.valueOf(inicio));
+            stmt.setDate(2, Date.valueOf(fim));
 
             ResultSet rs = stmt.executeQuery();
 
@@ -96,14 +95,13 @@ public class TransacaoDAO {
                 + "FROM transacoes t "
                 + "LEFT JOIN contas c ON t.conta_id = c.id "
                 + "LEFT JOIN categorias cat ON t.categoria_id = cat.id "
-                + "WHERE t.usuario_id = ? AND t.tipo = ? AND t.data_transacao BETWEEN ? AND ? "
+                + "WHERE t.tipo = ? AND t.data_transacao BETWEEN ? AND ? "
                 + "ORDER BY t.data_transacao DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
-            stmt.setString(2, tipo);
-            stmt.setDate(3, Date.valueOf(inicio));
-            stmt.setDate(4, Date.valueOf(fim));
+            stmt.setString(1, tipo);
+            stmt.setDate(2, Date.valueOf(inicio));
+            stmt.setDate(3, Date.valueOf(fim));
 
             ResultSet rs = stmt.executeQuery();
 
@@ -167,13 +165,12 @@ public class TransacaoDAO {
     // Métodos de agregação
     public Double obterTotalPorTipo(Integer usuarioId, String tipo, LocalDate inicio, LocalDate fim) throws SQLException {
         String sql = "SELECT SUM(valor) as total FROM transacoes "
-                + "WHERE usuario_id = ? AND tipo = ? AND data_transacao BETWEEN ? AND ?";
+                + "WHERE tipo = ? AND data_transacao BETWEEN ? AND ?";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
-            stmt.setString(2, tipo);
-            stmt.setDate(3, Date.valueOf(inicio));
-            stmt.setDate(4, Date.valueOf(fim));
+            stmt.setString(1, tipo);
+            stmt.setDate(2, Date.valueOf(inicio));
+            stmt.setDate(3, Date.valueOf(fim));
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -188,15 +185,14 @@ public class TransacaoDAO {
         String sql = "SELECT cat.nome, SUM(t.valor) as total, COUNT(t.id) as quantidade "
                 + "FROM transacoes t "
                 + "JOIN categorias cat ON t.categoria_id = cat.id "
-                + "WHERE t.usuario_id = ? AND t.tipo = 'DESPESA' "
+                + "WHERE t.tipo = 'DESPESA' "
                 + "AND t.data_transacao BETWEEN ? AND ? "
                 + "GROUP BY cat.nome "
                 + "ORDER BY total DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
-            stmt.setDate(2, Date.valueOf(inicio));
-            stmt.setDate(3, Date.valueOf(fim));
+            stmt.setDate(1, Date.valueOf(inicio));
+            stmt.setDate(2, Date.valueOf(fim));
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -216,13 +212,11 @@ public class TransacaoDAO {
                 + "FROM transacoes t "
                 + "LEFT JOIN contas c ON t.conta_id = c.id "
                 + "LEFT JOIN categorias cat ON t.categoria_id = cat.id "
-                + "WHERE t.usuario_id = ? "
                 + "ORDER BY t.data_transacao DESC, t.id DESC "
                 + "LIMIT ?";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
-            stmt.setInt(2, limite);
+            stmt.setInt(1, limite);
 
             ResultSet rs = stmt.executeQuery();
 
@@ -279,15 +273,14 @@ public class TransacaoDAO {
         String sql = "SELECT cat.nome, SUM(t.valor) as total "
                 + "FROM transacoes t "
                 + "LEFT JOIN categorias cat ON t.categoria_id = cat.id "
-                + "WHERE t.usuario_id = ? AND t.tipo = 'RECEITA' "
+                + "WHERE t.tipo = 'RECEITA' "
                 + "AND t.data_transacao >= ? AND t.data_transacao <= ? "
                 + "GROUP BY cat.nome "
                 + "ORDER BY total DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
-            stmt.setDate(2, Date.valueOf(inicio));
-            stmt.setDate(3, Date.valueOf(fim));
+            stmt.setDate(1, Date.valueOf(inicio));
+            stmt.setDate(2, Date.valueOf(fim));
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {

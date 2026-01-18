@@ -57,10 +57,11 @@ public class ContaDAO {
     
     public List<Conta> listarPorUsuario(Integer usuarioId) throws SQLException {
         List<Conta> contas = new ArrayList<>();
-        String sql = "SELECT * FROM contas WHERE usuario_id = ? AND ativo = TRUE ORDER BY nome";
+        // Listar TODAS as contas ativas (sem filtro de usuário)
+        // para que todos os usuários vejam todas as contas
+        String sql = "SELECT * FROM contas WHERE ativo = TRUE ORDER BY nome";
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
             ResultSet rs = stmt.executeQuery();
             
             while (rs.next()) {
@@ -107,10 +108,9 @@ public class ContaDAO {
     
     public List<String> listarNomesPorUsuario(Integer usuarioId) throws SQLException {
         List<String> nomes = new ArrayList<>();
-        String sql = "SELECT nome FROM contas WHERE usuario_id = ? AND ativo = TRUE ORDER BY nome";
+        String sql = "SELECT nome FROM contas WHERE ativo = TRUE ORDER BY nome";
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
             ResultSet rs = stmt.executeQuery();
             
             while (rs.next()) {
@@ -121,10 +121,9 @@ public class ContaDAO {
     }
     
     public BigDecimal obterSaldoTotalPorUsuario(Integer usuarioId) throws SQLException {
-        String sql = "SELECT SUM(saldo_atual) as total FROM contas WHERE usuario_id = ? AND ativo = TRUE";
+        String sql = "SELECT SUM(saldo_atual) as total FROM contas WHERE ativo = TRUE";
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
             ResultSet rs = stmt.executeQuery();
             
             if (rs.next()) {
