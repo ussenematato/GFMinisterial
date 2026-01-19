@@ -11,10 +11,12 @@ import org.jfree.data.general.DefaultPieDataset;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.print.PrinterException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.text.MessageFormat;
 import java.util.List;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -46,6 +48,7 @@ public class RelatoriosView extends JDialog {
     private JPanel panelDespesasCategoria;
     private JPanel panelEvolucaoMensal;
     private JTabbedPane tabbedPane;
+    private JTable tabelaContas;
     public RelatoriosView(Integer usuarioId) {
         this.usuarioId = usuarioId;
         this.transacaoController = new TransacaoController(usuarioId);
@@ -201,7 +204,7 @@ public class RelatoriosView extends JDialog {
             }
         };
         
-        JTable tabelaContas = new JTable(modeloContas);
+        this.tabelaContas = new JTable(modeloContas);
         tabelaContas.setFont(new Font("Arial", Font.PLAIN, 11));
         tabelaContas.getTableHeader().setFont(new Font("Arial", Font.BOLD, 11));
         tabelaContas.setRowHeight(25);
@@ -262,16 +265,15 @@ public class RelatoriosView extends JDialog {
                 BigDecimal bdValor = BigDecimal.valueOf(valor);
                 totalReceitas = totalReceitas.add(bdValor);
                 
-                sb.append(String.format("│ %-45s %s%-15s│\n", 
+                sb.append(String.format("│ %-40s %15s │\n", 
                     categoria, 
-                    " ".repeat(20),
                     CurrencyUtils.formatCurrency(bdValor)));
             }
         }
         
         sb.append("├────────────────────────────────────────────────────────────────────────────┤\n");
-        sb.append(String.format("│ TOTAL RECEITAS: %s%-40s│\n", 
-            " ".repeat(20),
+        sb.append(String.format("│ %-40s %15s │\n", 
+            "TOTAL RECEITAS:",
             CurrencyUtils.formatCurrency(totalReceitas)));
         sb.append("└────────────────────────────────────────────────────────────────────────────┘\n\n");
         
@@ -294,16 +296,15 @@ public class RelatoriosView extends JDialog {
                 BigDecimal bdValor = BigDecimal.valueOf(valor);
                 totalDespesas = totalDespesas.add(bdValor);
                 
-                sb.append(String.format("│ %-45s %s%-15s│\n", 
+                sb.append(String.format("│ %-40s %15s │\n", 
                     categoria,
-                    " ".repeat(20),
                     CurrencyUtils.formatCurrency(bdValor)));
             }
         }
         
         sb.append("├────────────────────────────────────────────────────────────────────────────┤\n");
-        sb.append(String.format("│ TOTAL DESPESAS: %s%-40s│\n", 
-            " ".repeat(20),
+        sb.append(String.format("│ %-40s %15s │\n", 
+            "TOTAL DESPESAS:",
             CurrencyUtils.formatCurrency(totalDespesas)));
         sb.append("└────────────────────────────────────────────────────────────────────────────┘\n\n");
         
@@ -315,11 +316,11 @@ public class RelatoriosView extends JDialog {
         BigDecimal saldoTotal = contaController.obterSaldoTotal();
         BigDecimal saldoPeriodo = totalReceitas.subtract(totalDespesas);
         
-        sb.append(String.format("│ Saldo do Período:  %s%-40s│\n", 
-            " ".repeat(20),
+        sb.append(String.format("│ %-40s %15s │\n", 
+            "Saldo do Período:",
             CurrencyUtils.formatCurrency(saldoPeriodo)));
-        sb.append(String.format("│ Saldo Total (Contas): %s%-37s│\n", 
-            " ".repeat(15),
+        sb.append(String.format("│ %-40s %15s │\n", 
+            "Saldo Total (Contas):",
             CurrencyUtils.formatCurrency(saldoTotal)));
         
         sb.append("└────────────────────────────────────────────────────────────────────────────┘\n");
@@ -570,7 +571,43 @@ public class RelatoriosView extends JDialog {
     }
     
     private void imprimir() {
-        JOptionPane.showMessageDialog(this, "Funcionalidade de impressão em desenvolvimento", "Imprimir", JOptionPane.INFORMATION_MESSAGE);
+        String[] options = {"Detalhamento Completo", "Tabela de Contas", "Cancelar"};
+        int escolha = JOptionPane.showOptionDialog(this,
+                "Escolha o que deseja imprimir:",
+                "Imprimir",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (escolha == 0) { // Detalhamento Completo
+            try {
+                boolean ok = txtDetalhamentoCompleto.print();
+                if (!ok) {
+                    JOptionPane.showMessageDialog(this, "Impressão cancelada ou sem sucesso.", "Imprimir", JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (PrinterException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Erro ao imprimir: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        } else if (escolha == 1) { // Tabela de Contas
+            if (tabelaContas == null) {
+                JOptionPane.showMessageDialog(this, "Tabela de contas não disponível para impressão.", "Imprimir", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            try {
+                MessageFormat header = new MessageFormat("Saldo das Contas - Relatório");
+                MessageFormat footer = new MessageFormat("Página {0}");
+                boolean printed = tabelaContas.print(JTable.PrintMode.FIT_WIDTH, header, footer);
+                if (!printed) {
+                    JOptionPane.showMessageDialog(this, "Impressão cancelada ou sem sucesso.", "Imprimir", JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (PrinterException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Erro ao imprimir: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
     
     private void exportarParaExcel() {

@@ -127,7 +127,7 @@ public class MenuPrincipal extends JFrame {
         JButton btnConfiguracoes = new JButton("Configurações");
         JButton btnAdmiSystem = new JButton("AdmiSystem");
         JButton btnLogs = new JButton("Gestão de Logs");
-        JButton btnVoltar = new JButton("Voltar ao Dashboard");
+        JButton btnVoltar = new JButton("Sair");
         
         // Estilo dos botões usando UIStyler
         for (JButton btn : new JButton[]{btnInicio, btnContas, btnCategorias, btnTransacoes, btnConfiguracoes}) {
@@ -170,7 +170,18 @@ public class MenuPrincipal extends JFrame {
             btnLogs.addActionListener(e -> mostrarTela("LOGS"));
         }
         
-        btnVoltar.addActionListener(e -> dispose());
+        btnVoltar.addActionListener(e -> {
+            int escolha = JOptionPane.showConfirmDialog(MenuPrincipal.this,
+                    "Tem certeza que deseja sair?",
+                    "Confirmar Saída",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+            if (escolha == JOptionPane.YES_OPTION) {
+                LoginView login = new LoginView();
+                login.setVisible(true);
+                MenuPrincipal.this.dispose();
+            }
+        });
         
         return panel;
     }
