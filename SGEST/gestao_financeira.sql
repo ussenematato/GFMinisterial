@@ -90,7 +90,7 @@ INSERT INTO `contas` (`id`, `nome`, `tipo`, `saldo_inicial`, `saldo_atual`, `ins
 
 CREATE TABLE `logs` (
   `id` int(11) NOT NULL,
-  `usuario_id` int(11) NOT NULL,
+  `usuario_id` int(11) DEFAULT NULL,
   `nome_usuario` varchar(255) NOT NULL,
   `operacao` varchar(50) NOT NULL COMMENT 'CRIAR, ATUALIZAR, DELETAR, VISUALIZAR',
   `descricao` text DEFAULT NULL COMMENT 'Detalhes da operação realizada',
@@ -254,7 +254,7 @@ ALTER TABLE `usuarios`
 -- Restrições para tabelas `logs`
 --
 ALTER TABLE `logs`
-  ADD CONSTRAINT `fk_log_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_log_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
 
 --
 -- Restrições para tabelas `transacoes`

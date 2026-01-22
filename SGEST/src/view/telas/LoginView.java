@@ -1,6 +1,7 @@
 package view.telas;
 
 import controller.UsuarioController;
+import controller.LogController;
 import model.entity.Usuario;
 import util.UIStyler;
 import javax.swing.*;
@@ -18,10 +19,12 @@ public class LoginView extends JFrame {
     private JLabel lblMensagem;
     private UsuarioController usuarioController;
     private Usuario usuarioLogado;
+    private LogController logController;
     
     public LoginView() {
         this.usuarioController = new UsuarioController();
         this.usuarioLogado = null;
+        this.logController = new LogController();
         
         initComponents();
     }
@@ -232,6 +235,12 @@ public class LoginView extends JFrame {
             
             if (usuario == null) {
                 lblMensagem.setText("Email ou senha inválidos");
+                // Registrar tentativa de login falhada (email não encontrado)
+                try {
+                    logController.registrarOperacao(null, email, "LOGIN", "Tentativa de login falhada: email não encontrado", "usuarios", null, "FALHA");
+                } catch (Exception ex) {
+                    // não propagar erro de log
+                }
                 txtSenha.setText("");
                 return;
             }
@@ -239,12 +248,19 @@ public class LoginView extends JFrame {
             // Verificar se usuário está ativo
             if (!usuario.getAtivo()) {
                 lblMensagem.setText("Usuário inativo. Contacte o administrador.");
+                try {
+                    logController.registrarOperacao(usuario.getId(), usuario.getNome(), "LOGIN", "Tentativa de login: usuário inativo", "usuarios", usuario.getId(), "FALHA");
+                } catch (Exception ex) {}
                 return;
             }
             
             // Verificar senha
             if (!UsuarioController.verificarSenha(senha, usuario.getSenhaHash())) {
                 lblMensagem.setText("Email ou senha inválidos");
+                // Registrar tentativa de login falhada (senha inválida)
+                try {
+                    logController.registrarOperacao(usuario.getId(), usuario.getNome(), "LOGIN", "Tentativa de login falhada: senha inválida", "usuarios", usuario.getId(), "FALHA");
+                } catch (Exception ex) {}
                 txtSenha.setText("");
                 return;
             }
@@ -252,6 +268,9 @@ public class LoginView extends JFrame {
             // Login bem-sucedido
             this.usuarioLogado = usuario;
             lblMensagem.setText("");
+            try {
+                logController.registrarOperacao(usuario.getId(), usuario.getNome(), "LOGIN", "Login bem-sucedido", "usuarios", usuario.getId(), "SUCESSO");
+            } catch (Exception ex) {}
             
             // Abrir MenuPrincipal com todos os dados
             SwingUtilities.invokeLater(() -> {
@@ -262,6 +281,9 @@ public class LoginView extends JFrame {
             
         } catch (Exception e) {
             lblMensagem.setText("Erro ao autenticar: " + e.getMessage());
+            try {
+                logController.registrarOperacao(null, email, "LOGIN", "Erro ao autenticar: " + e.getMessage(), "usuarios", null, "FALHA");
+            } catch (Exception ex) {}
             e.printStackTrace();
         }
     }

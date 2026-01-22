@@ -3,6 +3,7 @@ package model.dao;
 import model.conexao.Conexao;
 import model.entity.Log;
 import java.sql.*;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,7 @@ public class LogDAO {
     public void criarTabela() {
         String sql = "CREATE TABLE IF NOT EXISTS logs (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY," +
-                "usuario_id INT NOT NULL," +
+                "usuario_id INT DEFAULT NULL," +
                 "nome_usuario VARCHAR(255) NOT NULL," +
                 "operacao VARCHAR(50) NOT NULL," +
                 "descricao TEXT," +
@@ -23,7 +24,7 @@ public class LogDAO {
                 "registro_id INT," +
                 "data_hora DATETIME DEFAULT CURRENT_TIMESTAMP," +
                 "status_operacao VARCHAR(20) DEFAULT 'SUCESSO'," +
-                "FOREIGN KEY (usuario_id) REFERENCES usuarios(id)" +
+                "FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL" +
                 ")";
         
         try {
@@ -45,7 +46,11 @@ public class LogDAO {
             Connection conn = Conexao.getConexao();
             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             
-            pstmt.setInt(1, log.getUsuarioId());
+            if (log.getUsuarioId() != null) {
+                pstmt.setInt(1, log.getUsuarioId());
+            } else {
+                pstmt.setNull(1, Types.INTEGER);
+            }
             pstmt.setString(2, log.getNomeUsuario());
             pstmt.setString(3, log.getOperacao());
             pstmt.setString(4, log.getDescricao());
