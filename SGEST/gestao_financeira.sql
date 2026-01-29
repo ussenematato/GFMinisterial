@@ -117,9 +117,10 @@ CREATE TABLE `transacoes` (
   `recorrente` tinyint(1) DEFAULT 0,
   `frequencia` varchar(20) DEFAULT NULL,
   `conta_id` int(11) NOT NULL,
-  `categoria_id` int(11) NOT NULL,
+  `categoria_id` int(11) DEFAULT NULL,
   `usuario_id` int(11) NOT NULL,
   `observacoes` text DEFAULT NULL,
+  `transferencia_id` int(11) DEFAULT NULL,
   `data_registro` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -200,6 +201,7 @@ ALTER TABLE `transacoes`
   ADD PRIMARY KEY (`id`),
   ADD KEY `conta_id` (`conta_id`),
   ADD KEY `categoria_id` (`categoria_id`),
+  ADD KEY `idx_transferencia_id` (`transferencia_id`),
   ADD KEY `idx_usuario_data` (`usuario_id`,`data_transacao`),
   ADD KEY `idx_tipo_pago` (`tipo`,`pago`);
 

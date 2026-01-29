@@ -22,9 +22,9 @@ public class TransacaoDAO {
     // CRUD
     public void criar(Transacao transacao) throws SQLException {
         String sql = "INSERT INTO transacoes (descricao, valor, tipo, data_transacao, "
-                + "data_vencimento, pago, recorrente, frequencia, conta_id, "
-                + "categoria_id, usuario_id, observacoes) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + "data_vencimento, pago, recorrente, frequencia, conta_id, "
+            + "categoria_id, usuario_id, observacoes, transferencia_id) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, transacao.getDescricao());
@@ -36,9 +36,18 @@ public class TransacaoDAO {
             stmt.setBoolean(7, transacao.getRecorrente());
             stmt.setString(8, transacao.getFrequencia());
             stmt.setInt(9, transacao.getContaId());
-            stmt.setInt(10, transacao.getCategoriaId());
+            if (transacao.getCategoriaId() != null) {
+                stmt.setInt(10, transacao.getCategoriaId());
+            } else {
+                stmt.setNull(10, Types.INTEGER);
+            }
             stmt.setInt(11, transacao.getUsuarioId());
             stmt.setString(12, transacao.getObservacoes());
+            if (transacao.getTransferenciaId() != null) {
+                stmt.setInt(13, transacao.getTransferenciaId());
+            } else {
+                stmt.setNull(13, Types.INTEGER);
+            }
 
             stmt.executeUpdate();
 
@@ -51,7 +60,7 @@ public class TransacaoDAO {
 
     public Transacao buscarPorId(Integer id) throws SQLException {
         String sql = "SELECT t.*, c.nome as nome_conta, cat.nome as nome_categoria, cat.cor as cor_categoria "
-                + "FROM transacoes t "
+            + "FROM transacoes t "
                 + "LEFT JOIN contas c ON t.conta_id = c.id "
                 + "LEFT JOIN categorias cat ON t.categoria_id = cat.id "
                 + "WHERE t.id = ?";
@@ -114,9 +123,9 @@ public class TransacaoDAO {
 
     public void atualizar(Transacao transacao) throws SQLException {
         String sql = "UPDATE transacoes SET descricao = ?, valor = ?, tipo = ?, "
-                + "data_transacao = ?, data_vencimento = ?, pago = ?, "
-                + "recorrente = ?, frequencia = ?, conta_id = ?, "
-                + "categoria_id = ?, observacoes = ? WHERE id = ?";
+            + "data_transacao = ?, data_vencimento = ?, pago = ?, "
+            + "recorrente = ?, frequencia = ?, conta_id = ?, "
+            + "categoria_id = ?, observacoes = ?, transferencia_id = ? WHERE id = ?";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setString(1, transacao.getDescricao());
@@ -128,9 +137,18 @@ public class TransacaoDAO {
             stmt.setBoolean(7, transacao.getRecorrente());
             stmt.setString(8, transacao.getFrequencia());
             stmt.setInt(9, transacao.getContaId());
-            stmt.setInt(10, transacao.getCategoriaId());
+            if (transacao.getCategoriaId() != null) {
+                stmt.setInt(10, transacao.getCategoriaId());
+            } else {
+                stmt.setNull(10, Types.INTEGER);
+            }
             stmt.setString(11, transacao.getObservacoes());
-            stmt.setInt(12, transacao.getId());
+            if (transacao.getTransferenciaId() != null) {
+                stmt.setInt(12, transacao.getTransferenciaId());
+            } else {
+                stmt.setNull(12, Types.INTEGER);
+            }
+            stmt.setInt(13, transacao.getId());
 
             stmt.executeUpdate();
         }
@@ -252,6 +270,16 @@ public class TransacaoDAO {
         transacao.setCategoriaId(rs.getInt("categoria_id"));
         transacao.setUsuarioId(rs.getInt("usuario_id"));
         transacao.setObservacoes(rs.getString("observacoes"));
+
+        // Transferencia id (pode ser nulo)
+        try {
+            int tid = rs.getInt("transferencia_id");
+            if (!rs.wasNull()) {
+                transacao.setTransferenciaId(tid);
+            }
+        } catch (SQLException ex) {
+            // coluna pode não existir em DB mais antigo; ignorar
+        }
 
         // Tratar data de registro (pode ser nula)
         Timestamp dataRegistro = rs.getTimestamp("data_registro");

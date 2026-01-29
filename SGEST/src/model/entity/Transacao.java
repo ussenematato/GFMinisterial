@@ -19,6 +19,7 @@ public class Transacao {
     private Integer usuarioId;
     private String observacoes;
     private LocalDateTime dataRegistro;
+    private Integer transferenciaId;
     
     // Campos das joins (para exibição)
     private String nomeConta;
@@ -159,6 +160,14 @@ public class Transacao {
     
     public void setDataRegistro(LocalDateTime dataRegistro) {
         this.dataRegistro = dataRegistro;
+    }
+
+    public Integer getTransferenciaId() {
+        return transferenciaId;
+    }
+
+    public void setTransferenciaId(Integer transferenciaId) {
+        this.transferenciaId = transferenciaId;
     }
     
     public String getNomeConta() {

@@ -3,9 +3,11 @@ package controller;
 import model.entity.Transacao;
 import model.dao.TransacaoDAO;
 import model.dao.ContaDAO;
+import model.conexao.Conexao;
 import model.dao.UsuarioDAO;
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -120,6 +122,75 @@ public class TransacaoController {
             logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "ATUALIZAR", 
                 "Falha ao atualizar transação: " + e.getMessage(), "Transacao", id, "FALHA");
             return false;
+        }
+    }
+
+    public boolean registrarTransferencia(String descricao, BigDecimal valor, LocalDate dataTransacao,
+            Integer contaOrigemId, Integer contaDestinoId,
+            String observacoes) {
+        Connection conn = null;
+        try {
+            conn = Conexao.getConexao();
+            conn.setAutoCommit(false);
+
+            TransacaoDAO transacaoDAO = new TransacaoDAO(conn);
+            ContaDAO contaDAO = new ContaDAO(conn);
+
+            // Verificar saldo
+            var contaOrigem = contaDAO.buscarPorId(contaOrigemId);
+            if (contaOrigem == null || contaOrigem.getSaldoAtual().compareTo(valor) < 0) {
+                throw new IllegalStateException("Saldo insuficiente na conta de origem");
+            }
+
+            // Criar transação de transferência (origem) - tipo TRANSFERENCIA, categoria NULL
+            Transacao origem = new Transacao(descricao, valor, "TRANSFERENCIA",
+                    dataTransacao, contaOrigemId, null, usuarioLogadoId);
+            origem.setPago(true);
+            origem.setObservacoes("Transferência para " + contaDestinoId + ". " + observacoes);
+
+            transacaoDAO.criar(origem);
+
+            // Usar id gerado como grupo de transferência
+            Integer grupo = origem.getId();
+            origem.setTransferenciaId(grupo);
+            transacaoDAO.atualizar(origem);
+
+            // Criar transação de transferência (destino) - mesmo tipo, categoria NULL
+            Transacao destino = new Transacao(descricao, valor, "TRANSFERENCIA",
+                    dataTransacao, contaDestinoId, null, usuarioLogadoId);
+            destino.setPago(true);
+            destino.setObservacoes("Transferência recebida de " + contaOrigemId + ". " + observacoes);
+            destino.setTransferenciaId(grupo);
+
+            transacaoDAO.criar(destino);
+
+            // Atualizar saldos
+            var contaDestino = contaDAO.buscarPorId(contaDestinoId);
+            contaDAO.atualizarSaldo(contaOrigemId, contaOrigem.getSaldoAtual().subtract(valor));
+            contaDAO.atualizarSaldo(contaDestinoId, contaDestino.getSaldoAtual().add(valor));
+
+            conn.commit();
+
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "CRIAR",
+                    "Transferência: " + descricao + " - " + valor, "Transacao", grupo);
+
+            return true;
+        } catch (SQLException | IllegalStateException e) {
+            try {
+                if (conn != null) conn.rollback();
+            } catch (SQLException ex) {
+                // ignore
+            }
+            System.err.println("Erro ao registrar transferência: " + e.getMessage());
+            logController.registrarOperacao(usuarioLogadoId, obterNomeUsuario(), "CRIAR",
+                    "Falha ao registrar transferência: " + e.getMessage(), "Transacao", null, "FALHA");
+            return false;
+        } finally {
+            try {
+                if (conn != null) conn.setAutoCommit(true);
+            } catch (SQLException ex) {
+                // ignore
+            }
         }
     }
 

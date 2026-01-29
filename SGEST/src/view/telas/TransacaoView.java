@@ -58,7 +58,7 @@ public class TransacaoView extends JDialog {
         carregarCombos();
         carregarTransacoesPeriodo();
     }
-    
+
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         
@@ -576,6 +576,9 @@ public class TransacaoView extends JDialog {
         chkPago.setSelected(false);
         chkRecorrente.setSelected(false);
         cmbFrequencia.setEnabled(false);
+        cmbCategoria.setEnabled(true);
+        chkPago.setEnabled(true);
+        chkRecorrente.setEnabled(true);
         transacaoEditando = null;
         btnSalvar.setText("Salvar");
         tblTransacoes.clearSelection();
