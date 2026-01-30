@@ -288,6 +288,15 @@ public class DashboardCard extends CardBase {
         JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
         JButton btnNovaConta = criarBotao("Nova Conta", new Color(30, 136, 229));
         JButton btnVerTodas = criarBotao("Ver Todas", new Color(96, 125, 139));
+
+        
+        // Remover aparência de botão (sem borda/preenchimento) para o card contas
+        for (JButton btn : new JButton[]{btnNovaConta, btnVerTodas}) {
+            btn.setBorderPainted(false);
+            btn.setContentAreaFilled(false);
+            btn.setFocusPainted(false);
+            btn.setOpaque(false);
+        }
         
         panelBotoes.add(btnNovaConta);
         panelBotoes.add(btnVerTodas);
@@ -368,6 +377,14 @@ public class DashboardCard extends CardBase {
         JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
         JButton btnNovaTransacao = criarBotao("Nova Transação", new Color(30, 136, 229));
         JButton btnVerTodas = criarBotao("Ver Todas", new Color(96, 125, 139));
+
+          // Remover aparência de botão (sem borda/preenchimento) para o card transações
+        for (JButton btn : new JButton[]{btnNovaTransacao, btnVerTodas}) {
+            btn.setBorderPainted(false);
+            btn.setContentAreaFilled(false);
+            btn.setFocusPainted(false);
+            btn.setOpaque(false);
+        }
         
         panelBotoes.add(btnNovaTransacao);
         panelBotoes.add(btnVerTodas);
@@ -440,10 +457,10 @@ public class DashboardCard extends CardBase {
         btnTransacoes.addActionListener(e -> menuPrincipal.mostrarTela("TRANSAÇÕES"));
         btnRelatorios.addActionListener(e -> menuPrincipal.mostrarTela("RELATORIOS"));
         
-        panel.add(btnContas);
-        panel.add(btnCategorias);
-        panel.add(btnTransacoes);
-        panel.add(btnRelatorios);
+        // panel.add(btnContas);
+        // panel.add(btnCategorias);
+        // panel.add(btnTransacoes);
+        // panel.add(btnRelatorios);
         
         return panel;
     }
