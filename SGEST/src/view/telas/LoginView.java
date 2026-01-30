@@ -114,7 +114,7 @@ public class LoginView extends JFrame {
     
     private JPanel criarPanelLogin() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(240, 240, 240));
+        panel.setBackground(new Color(235, 108, 67));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(15, 30, 15, 30);
@@ -209,6 +209,14 @@ public class LoginView extends JFrame {
         UIStyler.styleDangerButton(btnSair);
         btnSair.addActionListener(e -> sair());
         panel.add(btnSair, gbc);
+
+                // Remover aparência de botão (sem borda/preenchimento) para o card contas
+        for (JButton btn : new JButton[]{btnEntrar, btnRecuperarSenha, btnSair}) {
+            btn.setBorderPainted(false);
+            // btn.setContentAreaFilled(false);
+            btn.setFocusPainted(false);
+            btn.setOpaque(false);
+        }
         
         return panel;
     }
