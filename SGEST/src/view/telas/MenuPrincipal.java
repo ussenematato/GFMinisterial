@@ -136,6 +136,14 @@ public class MenuPrincipal extends JFrame {
         UIStyler.styleDangerButton(btnAdmiSystem); // Destacar como acesso crítico
         UIStyler.styleWarningButton(btnLogs); // Destacar como acesso crítico
         UIStyler.styleNeutralButton(btnVoltar);
+
+        // Remover aparência de botão (sem borda/preenchimento) para o menu principal
+        for (JButton btn : new JButton[]{btnInicio, btnContas, btnCategorias, btnTransacoes, btnConfiguracoes, btnAdmiSystem, btnLogs, btnVoltar}) {
+            btn.setBorderPainted(false);
+            btn.setContentAreaFilled(false);
+            btn.setFocusPainted(false);
+            btn.setOpaque(false);
+        }
         
         panel.add(btnInicio);
         panel.add(btnContas);
