@@ -213,9 +213,6 @@ public class LoginView extends JFrame {
                 // Remover aparência de botão (sem borda/preenchimento) para o card contas
         for (JButton btn : new JButton[]{btnEntrar, btnRecuperarSenha, btnSair}) {
             btn.setBorderPainted(false);
-            // btn.setContentAreaFilled(false);
-            btn.setFocusPainted(false);
-            btn.setOpaque(false);
         }
         
         return panel;
