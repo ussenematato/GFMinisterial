@@ -12,7 +12,10 @@ import java.awt.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import com.toedter.calendar.JDateChooser;
 import java.util.List;
 import view.telas.MenuPrincipal;
 
@@ -32,8 +35,8 @@ public class TransacoesCard extends CardBase {
     private JCheckBox chkPago;
     private JCheckBox chkRecorrente;
     private JComboBox<String> cmbFrequencia;
-    private JFormattedTextField txtDataTransacao;
-    private JFormattedTextField txtDataVencimento;
+    private JDateChooser txtDataTransacao;
+    private JDateChooser txtDataVencimento;
     
     private JTable tblTransacoes;
     private DefaultTableModel modelTransacoes;
@@ -150,18 +153,20 @@ public class TransacoesCard extends CardBase {
         gbc.gridx = 0;
         gbc.gridy = 3;
         panel.add(new JLabel("Data:*"), gbc);
-        
-        txtDataTransacao = new JFormattedTextField("##/##/####");
-        txtDataTransacao.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+        txtDataTransacao = new JDateChooser();
+        txtDataTransacao.setDateFormatString("dd/MM/yyyy");
+        txtDataTransacao.setDate(new Date());
         gbc.gridx = 1;
         panel.add(txtDataTransacao, gbc);
         
         // Data Vencimento
         gbc.gridx = 2;
         panel.add(new JLabel("Vencimento:"), gbc);
-        
-        txtDataVencimento = new JFormattedTextField("##/##/####");
-        txtDataVencimento.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+        txtDataVencimento = new JDateChooser();
+        txtDataVencimento.setDateFormatString("dd/MM/yyyy");
+        txtDataVencimento.setDate(new Date());
         gbc.gridx = 3;
         panel.add(txtDataVencimento, gbc);
         
@@ -276,8 +281,9 @@ public class TransacoesCard extends CardBase {
         gbc.gridx = 2;
         panel.add(new JLabel("Data Início:"), gbc);
         
-        JFormattedTextField txtDataInicio = new JFormattedTextField("##/##/####");
-        txtDataInicio.setText(LocalDate.now().withDayOfMonth(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        JDateChooser txtDataInicio = new JDateChooser();
+        txtDataInicio.setDateFormatString("dd/MM/yyyy");
+        txtDataInicio.setDate(Date.from(LocalDate.now().withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
         gbc.gridx = 3;
         panel.add(txtDataInicio, gbc);
         
@@ -285,8 +291,9 @@ public class TransacoesCard extends CardBase {
         gbc.gridx = 4;
         panel.add(new JLabel("Data Fim:"), gbc);
         
-        JFormattedTextField txtDataFim = new JFormattedTextField("##/##/####");
-        txtDataFim.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        JDateChooser txtDataFim = new JDateChooser();
+        txtDataFim.setDateFormatString("dd/MM/yyyy");
+        txtDataFim.setDate(new Date());
         gbc.gridx = 5;
         panel.add(txtDataFim, gbc);
         
@@ -302,10 +309,10 @@ public class TransacoesCard extends CardBase {
         JButton btnFiltrar = criarBotao("Filtrar", new Color(70, 130, 180));
         btnFiltrar.addActionListener(e -> {
             try {
-                LocalDate inicio = LocalDate.parse(txtDataInicio.getText(), 
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                LocalDate fim = LocalDate.parse(txtDataFim.getText(), 
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                Date di = txtDataInicio.getDate();
+                Date df = txtDataFim.getDate();
+                LocalDate inicio = di != null ? di.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : LocalDate.now().withDayOfMonth(1);
+                LocalDate fim = df != null ? df.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : LocalDate.now();
                 String tipo = cmbFiltroTipo.getSelectedItem().toString();
                 String status = cmbStatus.getSelectedItem().toString();
                 filtrarTransacoes(inicio, fim, tipo, status);
@@ -460,25 +467,18 @@ public class TransacoesCard extends CardBase {
             }
             
             LocalDate dataTransacao;
-            try {
-                dataTransacao = LocalDate.parse(txtDataTransacao.getText(), 
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            } catch (Exception e) {
+            Date dt = txtDataTransacao.getDate();
+            if (dt == null) {
                 mostrarMensagemErro("Data inválida. Use o formato dd/MM/yyyy.");
                 txtDataTransacao.requestFocus();
                 return;
             }
-            
+            dataTransacao = dt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
             LocalDate dataVencimento = dataTransacao;
-            if (!txtDataVencimento.getText().trim().isEmpty()) {
-                try {
-                    dataVencimento = LocalDate.parse(txtDataVencimento.getText(), 
-                        DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                } catch (Exception e) {
-                    mostrarMensagemErro("Data de vencimento inválida. Use o formato dd/MM/yyyy.");
-                    txtDataVencimento.requestFocus();
-                    return;
-                }
+            Date dv = txtDataVencimento.getDate();
+            if (dv != null) {
+                dataVencimento = dv.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             }
             
             Conta contaSelecionada = (Conta) cmbConta.getSelectedItem();
@@ -597,10 +597,8 @@ public class TransacoesCard extends CardBase {
                     }
                 }
                 
-                txtDataTransacao.setText(transacaoEditando.getDataTransacao()
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-                txtDataVencimento.setText(transacaoEditando.getDataVencimento()
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                txtDataTransacao.setDate(Date.from(transacaoEditando.getDataTransacao().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+                txtDataVencimento.setDate(Date.from(transacaoEditando.getDataVencimento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
                 txtObservacoes.setText(transacaoEditando.getObservacoes());
                 chkRecorrente.setSelected(transacaoEditando.getRecorrente());
                 
@@ -733,8 +731,8 @@ public class TransacoesCard extends CardBase {
         txtDescricao.setText("");
         txtValor.setText("0.00");
         cmbTipo.setSelectedIndex(0);
-        txtDataTransacao.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        txtDataVencimento.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        txtDataTransacao.setDate(new Date());
+        txtDataVencimento.setDate(new Date());
         txtObservacoes.setText("");
         chkPago.setSelected(false);
         chkPago.setEnabled(true); // Reabilitar por padrão

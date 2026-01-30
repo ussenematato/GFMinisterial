@@ -12,7 +12,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import com.toedter.calendar.JDateChooser;
 import java.util.List;
 
 public class TransacaoView extends JDialog {
@@ -32,8 +35,8 @@ public class TransacaoView extends JDialog {
     private JCheckBox chkPago;
     private JCheckBox chkRecorrente;
     private JComboBox<String> cmbFrequencia;
-    private JFormattedTextField txtDataTransacao;
-    private JFormattedTextField txtDataVencimento;
+    private JDateChooser txtDataTransacao;
+    private JDateChooser txtDataVencimento;
     
     private JTable tblTransacoes;
     private DefaultTableModel modelTransacoes;
@@ -143,18 +146,20 @@ public class TransacaoView extends JDialog {
         gbc.gridx = 0;
         gbc.gridy = 3;
         panel.add(new JLabel("Data:*"), gbc);
-        
-        txtDataTransacao = new JFormattedTextField(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        txtDataTransacao.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+        txtDataTransacao = new JDateChooser();
+        txtDataTransacao.setDateFormatString("dd/MM/yyyy");
+        txtDataTransacao.setDate(new Date());
         gbc.gridx = 1;
         panel.add(txtDataTransacao, gbc);
         
         // Data Vencimento
         gbc.gridx = 2;
         panel.add(new JLabel("Vencimento:"), gbc);
-        
-        txtDataVencimento = new JFormattedTextField(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        txtDataVencimento.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+        txtDataVencimento = new JDateChooser();
+        txtDataVencimento.setDateFormatString("dd/MM/yyyy");
+        txtDataVencimento.setDate(new Date());
         gbc.gridx = 3;
         panel.add(txtDataVencimento, gbc);
         
@@ -220,8 +225,9 @@ public class TransacaoView extends JDialog {
         gbc.gridx = 2;
         panelFiltros.add(new JLabel("Data Início:"), gbc);
         
-        JFormattedTextField txtDataInicio = new JFormattedTextField(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        txtDataInicio.setText(LocalDate.now().withDayOfMonth(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        JDateChooser txtDataInicio = new JDateChooser();
+        txtDataInicio.setDateFormatString("dd/MM/yyyy");
+        txtDataInicio.setDate(Date.from(LocalDate.now().withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
         gbc.gridx = 3;
         panelFiltros.add(txtDataInicio, gbc);
         
@@ -229,8 +235,9 @@ public class TransacaoView extends JDialog {
         gbc.gridx = 4;
         panelFiltros.add(new JLabel("Data Fim:"), gbc);
         
-        JFormattedTextField txtDataFim = new JFormattedTextField(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        txtDataFim.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        JDateChooser txtDataFim = new JDateChooser();
+        txtDataFim.setDateFormatString("dd/MM/yyyy");
+        txtDataFim.setDate(new Date());
         gbc.gridx = 5;
         panelFiltros.add(txtDataFim, gbc);
         
@@ -238,8 +245,10 @@ public class TransacaoView extends JDialog {
         btnFiltrar = new JButton("Filtrar");
         util.UIStyler.stylePrimaryButton(btnFiltrar);
         btnFiltrar.addActionListener(e -> {
-            LocalDate inicio = LocalDate.parse(txtDataInicio.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            LocalDate fim = LocalDate.parse(txtDataFim.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            Date di = txtDataInicio.getDate();
+            Date df = txtDataFim.getDate();
+            LocalDate inicio = di != null ? di.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : LocalDate.now().withDayOfMonth(1);
+            LocalDate fim = df != null ? df.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : LocalDate.now();
             String tipo = cmbFiltroTipo.getSelectedItem().toString();
             filtrarTransacoes(inicio, fim, tipo);
         });
@@ -413,25 +422,18 @@ public class TransacaoView extends JDialog {
             }
             
             LocalDate dataTransacao;
-            try {
-                dataTransacao = LocalDate.parse(txtDataTransacao.getText(), 
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            } catch (Exception e) {
+            Date dt = txtDataTransacao.getDate();
+            if (dt == null) {
                 JOptionPane.showMessageDialog(this, "Data inválida. Use o formato dd/MM/yyyy.");
                 txtDataTransacao.requestFocus();
                 return;
             }
+            dataTransacao = dt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             
             LocalDate dataVencimento = dataTransacao;
-            if (!txtDataVencimento.getText().trim().isEmpty()) {
-                try {
-                    dataVencimento = LocalDate.parse(txtDataVencimento.getText(), 
-                        DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(this, "Data de vencimento inválida. Use o formato dd/MM/yyyy.");
-                    txtDataVencimento.requestFocus();
-                    return;
-                }
+            Date dv = txtDataVencimento.getDate();
+            if (dv != null) {
+                dataVencimento = dv.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             }
             
             Conta contaSelecionada = (Conta) cmbConta.getSelectedItem();
@@ -516,10 +518,8 @@ public class TransacaoView extends JDialog {
                     }
                 }
                 
-                txtDataTransacao.setText(transacaoEditando.getDataTransacao()
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-                txtDataVencimento.setText(transacaoEditando.getDataVencimento()
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                txtDataTransacao.setDate(Date.from(transacaoEditando.getDataTransacao().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+                txtDataVencimento.setDate(Date.from(transacaoEditando.getDataVencimento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
                 txtObservacoes.setText(transacaoEditando.getObservacoes());
                 chkPago.setSelected(transacaoEditando.getPago());
                 chkRecorrente.setSelected(transacaoEditando.getRecorrente());
@@ -570,8 +570,8 @@ public class TransacaoView extends JDialog {
         txtDescricao.setText("");
         txtValor.setText("0.00");
         cmbTipo.setSelectedIndex(0);
-        txtDataTransacao.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        txtDataVencimento.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        txtDataTransacao.setDate(new Date());
+        txtDataVencimento.setDate(new Date());
         txtObservacoes.setText("");
         chkPago.setSelected(false);
         chkRecorrente.setSelected(false);

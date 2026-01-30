@@ -55,12 +55,12 @@ public class LoginView extends JFrame {
     
     private JPanel criarPanelLogo() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(25, 25, 112)); // Azul escuro
+        panel.setBackground(new Color(255, 255, 255)); // Branco como fundo
         
         // Tentar carregar logo
         try {
             // Tentar carregar LogoOficial.jpeg primeiro
-            File logoFile = new File("src/view/telas/logos/LogoOficial.jpeg");
+            File logoFile = new File("src/view/telas/logos/Logo.jpeg");
             if (!logoFile.exists()) {
                 logoFile = new File("src/view/telas/logos/Logo.jpeg");
             }

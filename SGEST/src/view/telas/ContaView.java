@@ -8,7 +8,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import com.toedter.calendar.JDateChooser;
 import java.util.List;
 
 public class ContaView extends JDialog {
@@ -34,7 +37,7 @@ public class ContaView extends JDialog {
     private JTextField txtValorTrans;
     private JComboBox<Conta> cmbContaOrigemTrans;
     private JComboBox<Conta> cmbContaDestinoTrans;
-    private JFormattedTextField txtDataTrans;
+    private JDateChooser txtDataTrans;
     private JTextArea txtObservacoesTrans;
     private JButton btnRealizarTrans;
     private JButton btnLimparTrans;
@@ -134,9 +137,10 @@ public class ContaView extends JDialog {
         // Data
         gbc.gridx = 2;
         panel.add(new JLabel("Data:"), gbc);
-        
-        txtDataTrans = new JFormattedTextField(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        txtDataTrans.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+        txtDataTrans = new JDateChooser();
+        txtDataTrans.setDateFormatString("dd/MM/yyyy");
+        txtDataTrans.setDate(new Date());
         gbc.gridx = 3;
         panel.add(txtDataTrans, gbc);
         
@@ -437,7 +441,12 @@ public class ContaView extends JDialog {
             
             LocalDate data;
             try {
-                data = LocalDate.parse(txtDataTrans.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                Date d = txtDataTrans.getDate();
+                if (d != null) {
+                    data = d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                } else {
+                    data = LocalDate.now();
+                }
             } catch (Exception e) {
                 data = LocalDate.now();
             }
@@ -471,7 +480,7 @@ public class ContaView extends JDialog {
     private void limparFormularioTrans() {
         txtDescricaoTrans.setText("");
         txtValorTrans.setText("0.00");
-        txtDataTrans.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        txtDataTrans.setDate(new Date());
         txtObservacoesTrans.setText("");
         if (cmbContaOrigemTrans.getItemCount() > 0) {
             cmbContaOrigemTrans.setSelectedIndex(0);
