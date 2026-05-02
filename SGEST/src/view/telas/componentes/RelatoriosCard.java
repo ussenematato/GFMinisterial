@@ -2,28 +2,27 @@ package view.telas.componentes;
 
 import controller.TransacaoController;
 import controller.ContaController;
-import controller.CategoriaController;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Date;
+import java.util.Calendar;
+import com.toedter.calendar.JDateChooser;
 import view.telas.MenuPrincipal;
 
 public class RelatoriosCard extends CardBase {
     
     private TransacaoController transacaoController;
     private ContaController contaController;
-    private CategoriaController categoriaController;
     
     // Componentes da UI
     private JTabbedPane tabbedPane;
-    private JComboBox<String> cbPeriodo;
-    private JTextField txtDataInicio;
-    private JTextField txtDataFim;
+    private JDateChooser dateChooserInicio;
+    private JDateChooser dateChooserFim;
     private JButton btnFiltrar;
     private JButton btnLimparFiltros;
     
@@ -46,7 +45,6 @@ public class RelatoriosCard extends CardBase {
         super(usuarioId, menuPrincipal);
         this.transacaoController = new TransacaoController(usuarioId);
         this.contaController = new ContaController(usuarioId);
-        this.categoriaController = new CategoriaController(usuarioId);
         
         initComponents();
         configurarFiltros();
@@ -78,36 +76,39 @@ public class RelatoriosCard extends CardBase {
     
     private JPanel criarPainelFiltros() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Filtros"));
+        panel.setBorder(BorderFactory.createTitledBorder("Selecione o Intervalo de Datas"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
-        // Período
-        gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(new JLabel("Período:"), gbc);
-        
-        String[] periodos = {"Mês Atual", "Mês Anterior", "Últimos 3 Meses", "Últimos 6 Meses", "Ano Atual", "Personalizado"};
-        cbPeriodo = new JComboBox<>(periodos);
-        cbPeriodo.addActionListener(e -> atualizarPeriodo());
-        gbc.gridx = 1; gbc.gridy = 0;
-        panel.add(cbPeriodo, gbc);
-        
         // Data Início
-        gbc.gridx = 2; gbc.gridy = 0;
-        panel.add(new JLabel("De:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(new JLabel("Data Início:"), gbc);
         
-        txtDataInicio = new JTextField(10);
-        gbc.gridx = 3; gbc.gridy = 0;
-        panel.add(txtDataInicio, gbc);
+        dateChooserInicio = new JDateChooser();
+        dateChooserInicio.setDateFormatString("dd/MM/yyyy");
+        // Configurar data inicial (primeiro dia do mês)
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        dateChooserInicio.setDate(cal.getTime());
+        
+        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.weightx = 0.5;
+        panel.add(dateChooserInicio, gbc);
         
         // Data Fim
-        gbc.gridx = 4; gbc.gridy = 0;
-        panel.add(new JLabel("Até:"), gbc);
+        gbc.gridx = 2; gbc.gridy = 0;
+        gbc.weightx = 0;
+        panel.add(new JLabel("Data Fim:"), gbc);
         
-        txtDataFim = new JTextField(10);
-        gbc.gridx = 5; gbc.gridy = 0;
-        panel.add(txtDataFim, gbc);
+        dateChooserFim = new JDateChooser();
+        dateChooserFim.setDateFormatString("dd/MM/yyyy");
+        // Configurar data final (hoje)
+        dateChooserFim.setDate(new Date());
+        
+        gbc.gridx = 3; gbc.gridy = 0;
+        gbc.weightx = 0.5;
+        panel.add(dateChooserFim, gbc);
         
         // Botões
         JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
@@ -121,7 +122,8 @@ public class RelatoriosCard extends CardBase {
         panelBotoes.add(btnLimparFiltros);
         
         gbc.gridx = 0; gbc.gridy = 1;
-        gbc.gridwidth = 6;
+        gbc.gridwidth = 4;
+        gbc.weightx = 1;
         panel.add(panelBotoes, gbc);
         
         return panel;
@@ -207,57 +209,30 @@ public class RelatoriosCard extends CardBase {
     }
     
     private void configurarFiltros() {
-        // Configurar datas padrão (mês atual)
-        YearMonth mesAtual = YearMonth.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        txtDataInicio.setText(mesAtual.atDay(1).format(formatter));
-        txtDataFim.setText(mesAtual.atEndOfMonth().format(formatter));
+        // Configurar datas padrão (mês atual) - já feito em criarPainelFiltros
     }
     
-    private void atualizarPeriodo() {
-        String periodo = (String) cbPeriodo.getSelectedItem();
-        LocalDate hoje = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        
-        switch (periodo) {
-            case "Mês Atual":
-                YearMonth mesAtual = YearMonth.now();
-                txtDataInicio.setText(mesAtual.atDay(1).format(formatter));
-                txtDataFim.setText(mesAtual.atEndOfMonth().format(formatter));
-                break;
-                
-            case "Mês Anterior":
-                YearMonth mesAnterior = YearMonth.now().minusMonths(1);
-                txtDataInicio.setText(mesAnterior.atDay(1).format(formatter));
-                txtDataFim.setText(mesAnterior.atEndOfMonth().format(formatter));
-                break;
-                
-            case "Últimos 3 Meses":
-                txtDataInicio.setText(hoje.minusMonths(3).withDayOfMonth(1).format(formatter));
-                txtDataFim.setText(hoje.format(formatter));
-                break;
-                
-            case "Últimos 6 Meses":
-                txtDataInicio.setText(hoje.minusMonths(6).withDayOfMonth(1).format(formatter));
-                txtDataFim.setText(hoje.format(formatter));
-                break;
-                
-            case "Ano Atual":
-                txtDataInicio.setText(LocalDate.of(hoje.getYear(), 1, 1).format(formatter));
-                txtDataFim.setText(hoje.format(formatter));
-                break;
-                
-            case "Personalizado":
-                // Mantém as datas digitadas
-                break;
-        }
-    }
+
     
     private void aplicarFiltros() {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            filtroInicio = LocalDate.parse(txtDataInicio.getText(), formatter);
-            filtroFim = LocalDate.parse(txtDataFim.getText(), formatter);
+            if (dateChooserInicio.getDate() == null || dateChooserFim.getDate() == null) {
+                mostrarMensagemErro("Por favor, selecione ambas as datas!");
+                return;
+            }
+            
+            // Converter Date para LocalDate
+            Calendar calInicio = Calendar.getInstance();
+            calInicio.setTime(dateChooserInicio.getDate());
+            filtroInicio = LocalDate.of(calInicio.get(Calendar.YEAR), 
+                                       calInicio.get(Calendar.MONTH) + 1, 
+                                       calInicio.get(Calendar.DAY_OF_MONTH));
+            
+            Calendar calFim = Calendar.getInstance();
+            calFim.setTime(dateChooserFim.getDate());
+            filtroFim = LocalDate.of(calFim.get(Calendar.YEAR), 
+                                    calFim.get(Calendar.MONTH) + 1, 
+                                    calFim.get(Calendar.DAY_OF_MONTH));
             
             if (filtroInicio.isAfter(filtroFim)) {
                 mostrarMensagemErro("Data início não pode ser após data fim!");
@@ -268,13 +243,16 @@ public class RelatoriosCard extends CardBase {
             atualizarTabelaDetalhamento();
             
         } catch (Exception e) {
-            mostrarMensagemErro("Formato de data inválido! Use DD/MM/AAAA");
+            mostrarMensagemErro("Erro ao processar as datas: " + e.getMessage());
         }
     }
     
     private void limparFiltros() {
-        cbPeriodo.setSelectedIndex(0); // Mês Atual
-        atualizarPeriodo();
+        // Resetar para mês atual
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        dateChooserInicio.setDate(cal.getTime());
+        dateChooserFim.setDate(new Date());
         aplicarFiltros();
     }
     
