@@ -144,7 +144,7 @@ public class LoginView extends JFrame {
         gbc.gridy = 2;
         gbc.insets = new Insets(0, 30, 15, 30);
         
-        txtEmail = new JTextField(20);
+        txtEmail = new JTextField(30);
         txtEmail.setFont(new Font("Arial", Font.PLAIN, 14));
         txtEmail.setPreferredSize(new Dimension(200, 35));
         panel.add(txtEmail, gbc);
@@ -160,9 +160,9 @@ public class LoginView extends JFrame {
         gbc.gridy = 4;
         gbc.insets = new Insets(0, 30, 15, 30);
         
-        txtSenha = new JPasswordField(20);
+        txtSenha = new JPasswordField(30);
         txtSenha.setFont(new Font("Arial", Font.PLAIN, 14));
-        txtSenha.setPreferredSize(new Dimension(200, 35));
+        txtSenha.setPreferredSize(new Dimension(200, 45));
         panel.add(txtSenha, gbc);
         
         // Mensagem de erro
