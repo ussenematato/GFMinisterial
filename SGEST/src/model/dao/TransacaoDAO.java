@@ -4,10 +4,15 @@ import model.entity.Transacao;
 import model.conexao.Conexao;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TransacaoDAO {
+
+    // Formato usado pelo DEFAULT CURRENT_TIMESTAMP do SQLite (sem frações de segundo)
+    private static final DateTimeFormatter FORMATO_DATA_HORA = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private Connection conexao;
 
@@ -30,8 +35,8 @@ public class TransacaoDAO {
             stmt.setString(1, transacao.getDescricao());
             stmt.setBigDecimal(2, transacao.getValor());
             stmt.setString(3, transacao.getTipo());
-            stmt.setDate(4, Date.valueOf(transacao.getDataTransacao()));
-            stmt.setDate(5, Date.valueOf(transacao.getDataVencimento()));
+            stmt.setString(4, (transacao.getDataTransacao()).toString());
+            stmt.setString(5, (transacao.getDataVencimento()).toString());
             stmt.setBoolean(6, transacao.getPago());
             stmt.setBoolean(7, transacao.getRecorrente());
             stmt.setString(8, transacao.getFrequencia());
@@ -86,8 +91,8 @@ public class TransacaoDAO {
                 + "ORDER BY t.data_transacao DESC, t.id DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(inicio));
-            stmt.setDate(2, Date.valueOf(fim));
+            stmt.setString(1, (inicio).toString());
+            stmt.setString(2, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
 
@@ -109,8 +114,8 @@ public class TransacaoDAO {
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setString(1, tipo);
-            stmt.setDate(2, Date.valueOf(inicio));
-            stmt.setDate(3, Date.valueOf(fim));
+            stmt.setString(2, (inicio).toString());
+            stmt.setString(3, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
 
@@ -131,8 +136,8 @@ public class TransacaoDAO {
             stmt.setString(1, transacao.getDescricao());
             stmt.setBigDecimal(2, transacao.getValor());
             stmt.setString(3, transacao.getTipo());
-            stmt.setDate(4, Date.valueOf(transacao.getDataTransacao()));
-            stmt.setDate(5, Date.valueOf(transacao.getDataVencimento()));
+            stmt.setString(4, (transacao.getDataTransacao()).toString());
+            stmt.setString(5, (transacao.getDataVencimento()).toString());
             stmt.setBoolean(6, transacao.getPago());
             stmt.setBoolean(7, transacao.getRecorrente());
             stmt.setString(8, transacao.getFrequencia());
@@ -187,8 +192,8 @@ public class TransacaoDAO {
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setString(1, tipo);
-            stmt.setDate(2, Date.valueOf(inicio));
-            stmt.setDate(3, Date.valueOf(fim));
+            stmt.setString(2, (inicio).toString());
+            stmt.setString(3, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -209,8 +214,8 @@ public class TransacaoDAO {
                 + "ORDER BY total DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(inicio));
-            stmt.setDate(2, Date.valueOf(fim));
+            stmt.setString(1, (inicio).toString());
+            stmt.setString(2, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -253,14 +258,14 @@ public class TransacaoDAO {
         transacao.setTipo(rs.getString("tipo"));
 
         // Tratar datas nulas
-        Date dataTransacao = rs.getDate("data_transacao");
+        String dataTransacao = rs.getString("data_transacao");
         if (dataTransacao != null) {
-            transacao.setDataTransacao(dataTransacao.toLocalDate());
+            transacao.setDataTransacao(LocalDate.parse(dataTransacao));
         }
 
-        Date dataVencimento = rs.getDate("data_vencimento");
+        String dataVencimento = rs.getString("data_vencimento");
         if (dataVencimento != null) {
-            transacao.setDataVencimento(dataVencimento.toLocalDate());
+            transacao.setDataVencimento(LocalDate.parse(dataVencimento));
         }
 
         transacao.setPago(rs.getBoolean("pago"));
@@ -282,9 +287,9 @@ public class TransacaoDAO {
         }
 
         // Tratar data de registro (pode ser nula)
-        Timestamp dataRegistro = rs.getTimestamp("data_registro");
+        String dataRegistro = rs.getString("data_registro");
         if (dataRegistro != null) {
-            transacao.setDataRegistro(dataRegistro.toLocalDateTime());
+            transacao.setDataRegistro(LocalDateTime.parse(dataRegistro, FORMATO_DATA_HORA));
         }
 
         // Dados das joins
@@ -307,8 +312,8 @@ public class TransacaoDAO {
                 + "ORDER BY total DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(inicio));
-            stmt.setDate(2, Date.valueOf(fim));
+            stmt.setString(1, (inicio).toString());
+            stmt.setString(2, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -333,8 +338,8 @@ public class TransacaoDAO {
                 + "ORDER BY t.data_transacao DESC, t.id DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(inicio));
-            stmt.setDate(2, Date.valueOf(fim));
+            stmt.setString(1, (inicio).toString());
+            stmt.setString(2, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
 
@@ -356,8 +361,8 @@ public class TransacaoDAO {
                 + "ORDER BY total DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(inicio));
-            stmt.setDate(2, Date.valueOf(fim));
+            stmt.setString(1, (inicio).toString());
+            stmt.setString(2, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -382,8 +387,8 @@ public class TransacaoDAO {
                 + "ORDER BY total DESC";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(inicio));
-            stmt.setDate(2, Date.valueOf(fim));
+            stmt.setString(1, (inicio).toString());
+            stmt.setString(2, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -402,8 +407,8 @@ public class TransacaoDAO {
                 + "WHERE tipo = 'RECEITA' AND data_transacao BETWEEN ? AND ?";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(inicio));
-            stmt.setDate(2, Date.valueOf(fim));
+            stmt.setString(1, (inicio).toString());
+            stmt.setString(2, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -418,8 +423,8 @@ public class TransacaoDAO {
                 + "WHERE tipo = 'DESPESA' AND data_transacao BETWEEN ? AND ?";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(inicio));
-            stmt.setDate(2, Date.valueOf(fim));
+            stmt.setString(1, (inicio).toString());
+            stmt.setString(2, (fim).toString());
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {

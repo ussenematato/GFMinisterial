@@ -3,8 +3,8 @@ C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\controller\Conta
 C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\controller\LogController.java
 C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\controller\TransacaoController.java
 C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\controller\UsuarioController.java
-C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\model\conexao\BdScript.java
 C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\model\conexao\Conexao.java
+C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\model\conexao\DatabaseInitializer.java
 C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\model\dao\CategoriaDAO.java
 C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\model\dao\ContaDAO.java
 C:\Users\Ussene Matato\Documents\GitHub\GFMinisterial\SGEST\src\model\dao\LogDAO.java

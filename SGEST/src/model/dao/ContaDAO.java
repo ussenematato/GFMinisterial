@@ -4,12 +4,16 @@ import java.math.BigDecimal;
 import model.entity.Conta;
 import model.conexao.Conexao;
 import java.sql.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ContaDAO {
+    // Formato usado pelo DEFAULT CURRENT_TIMESTAMP do SQLite (sem frações de segundo)
+    private static final DateTimeFormatter FORMATO_DATA_HORA = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private Connection conexao;
-    
+
     public ContaDAO() {
         this.conexao = Conexao.getConexao();
     }
@@ -144,7 +148,7 @@ public class ContaDAO {
         conta.setInstituicao(rs.getString("instituicao"));
         conta.setUsuarioId(rs.getInt("usuario_id"));
         conta.setAtivo(rs.getBoolean("ativo"));
-        conta.setDataCriacao(rs.getTimestamp("data_criacao").toLocalDateTime());
+        conta.setDataCriacao(java.time.LocalDateTime.parse(rs.getString("data_criacao"), FORMATO_DATA_HORA));
         return conta;
     }
 

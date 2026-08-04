@@ -3,10 +3,14 @@ package model.dao;
 import model.entity.Usuario;
 import model.conexao.Conexao;
 import java.sql.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UsuarioDAO {
+    // Formato usado pelo DEFAULT CURRENT_TIMESTAMP do SQLite (sem frações de segundo)
+    private static final DateTimeFormatter FORMATO_DATA_HORA = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private Connection conexao;
     
     public UsuarioDAO() {
@@ -149,7 +153,7 @@ public class UsuarioDAO {
         usuario.setSenhaHash(rs.getString("senha_hash"));
         usuario.setPerfil(rs.getString("perfil"));
         usuario.setAtivo(rs.getBoolean("ativo"));
-        usuario.setDataCadastro(rs.getTimestamp("data_cadastro").toLocalDateTime());
+        usuario.setDataCadastro(java.time.LocalDateTime.parse(rs.getString("data_cadastro"), FORMATO_DATA_HORA));
         return usuario;
     }
 }

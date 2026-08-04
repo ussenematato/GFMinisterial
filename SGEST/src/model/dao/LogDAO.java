@@ -5,25 +5,29 @@ import model.entity.Log;
 import java.sql.*;
 import java.sql.Types;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LogDAO {
-    
+
+    // Formato compatível com o DEFAULT CURRENT_TIMESTAMP do SQLite (sem frações de segundo)
+    private static final DateTimeFormatter FORMATO_DATA_HORA = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     public LogDAO() {
     }
     
     public void criarTabela() {
         String sql = "CREATE TABLE IF NOT EXISTS logs (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY," +
-                "usuario_id INT DEFAULT NULL," +
-                "nome_usuario VARCHAR(255) NOT NULL," +
-                "operacao VARCHAR(50) NOT NULL," +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "usuario_id INTEGER DEFAULT NULL," +
+                "nome_usuario TEXT NOT NULL," +
+                "operacao TEXT NOT NULL," +
                 "descricao TEXT," +
-                "tabela VARCHAR(50)," +
-                "registro_id INT," +
-                "data_hora DATETIME DEFAULT CURRENT_TIMESTAMP," +
-                "status_operacao VARCHAR(20) DEFAULT 'SUCESSO'," +
+                "tabela TEXT," +
+                "registro_id INTEGER," +
+                "data_hora TEXT DEFAULT CURRENT_TIMESTAMP," +
+                "status_operacao TEXT DEFAULT 'SUCESSO'," +
                 "FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL" +
                 ")";
         
@@ -56,7 +60,7 @@ public class LogDAO {
             pstmt.setString(4, log.getDescricao());
             pstmt.setString(5, log.getTabela());
             pstmt.setObject(6, log.getRegistroId());
-            pstmt.setTimestamp(7, Timestamp.valueOf(log.getDataHora()));
+            pstmt.setString(7, log.getDataHora().format(FORMATO_DATA_HORA));
             pstmt.setString(8, log.getStatusOperacao());
             
             int affectedRows = pstmt.executeUpdate();
@@ -153,8 +157,8 @@ public class LogDAO {
         try {
             Connection conn = Conexao.getConexao();
             PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setTimestamp(1, Timestamp.valueOf(dataInicio));
-            pstmt.setTimestamp(2, Timestamp.valueOf(dataFim));
+            pstmt.setString(1, (dataInicio).format(FORMATO_DATA_HORA));
+            pstmt.setString(2, (dataFim).format(FORMATO_DATA_HORA));
             
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -198,8 +202,8 @@ public class LogDAO {
                 pstmt.setString(index++, operacao);
             }
             if (dataInicio != null && dataFim != null) {
-                pstmt.setTimestamp(index++, Timestamp.valueOf(dataInicio));
-                pstmt.setTimestamp(index, Timestamp.valueOf(dataFim));
+                pstmt.setString(index++, dataInicio.format(FORMATO_DATA_HORA));
+                pstmt.setString(index, dataFim.format(FORMATO_DATA_HORA));
             }
             
             ResultSet rs = pstmt.executeQuery();
@@ -260,13 +264,14 @@ public class LogDAO {
     }
     
     public boolean limparLogosAntigos(int diasRetencao) {
-        String sql = "DELETE FROM logs WHERE data_hora < DATE_SUB(NOW(), INTERVAL ? DAY)";
-        
+        String sql = "DELETE FROM logs WHERE data_hora < ?";
+
         try {
             Connection conn = Conexao.getConexao();
             PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, diasRetencao);
-            
+            LocalDateTime limite = LocalDateTime.now().minusDays(diasRetencao);
+            pstmt.setString(1, (limite).format(FORMATO_DATA_HORA));
+
             boolean result = pstmt.executeUpdate() > 0;
             pstmt.close();
             return result;
@@ -286,7 +291,7 @@ public class LogDAO {
         log.setDescricao(rs.getString("descricao"));
         log.setTabela(rs.getString("tabela"));
         log.setRegistroId(rs.getInt("registro_id"));
-        log.setDataHora(rs.getTimestamp("data_hora").toLocalDateTime());
+        log.setDataHora(LocalDateTime.parse(rs.getString("data_hora"), FORMATO_DATA_HORA));
         log.setStatusOperacao(rs.getString("status_operacao"));
         return log;
     }
