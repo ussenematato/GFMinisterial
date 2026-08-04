@@ -126,7 +126,7 @@ public class LoginView extends JFrame {
         gbc.gridwidth = 2;
         gbc.insets = new Insets(30, 30, 30, 30);
         
-        JLabel lblTitulo = new JLabel("Bem-vindo ao SGEST");
+        JLabel lblTitulo = new JLabel("Bem-vindo ao SGFM");
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 28));
         lblTitulo.setForeground(new Color(25, 25, 112));
         lblTitulo.setHorizontalAlignment(JLabel.CENTER);
@@ -134,7 +134,7 @@ public class LoginView extends JFrame {
         
         // Email
         gbc.gridy = 1;
-        gbc.gridwidth = 1;
+        gbc.gridwidth = 2;
         gbc.insets = new Insets(15, 30, 5, 30);
         
         JLabel lblEmail = new JLabel("Email:");
@@ -162,7 +162,7 @@ public class LoginView extends JFrame {
         
         txtSenha = new JPasswordField(30);
         txtSenha.setFont(new Font("Arial", Font.PLAIN, 14));
-        txtSenha.setPreferredSize(new Dimension(200, 45));
+        txtSenha.setPreferredSize(new Dimension(200, 35));
         panel.add(txtSenha, gbc);
         
         // Mensagem de erro
