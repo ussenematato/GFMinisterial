@@ -39,6 +39,12 @@ public class RelatoriosView extends JDialog {
     
     // Componentes de filtro
     private JComboBox<String> cmbPeriodo;
+    private JComboBox<String> cmbMesEspecifico;
+    private JComboBox<String> cmbMesInicio;
+    private JComboBox<String> cmbMesFim;
+    private JLabel lblMesEspecifico;
+    private JLabel lblMesInicio;
+    private JLabel lblMesAte;
     private LocalDate dataInicio;
     private LocalDate dataFim;
     
@@ -124,17 +130,95 @@ public class RelatoriosView extends JDialog {
             "Mês Atual",
             "Trimestre",
             "Semestre",
-            "Ano"
+            "Ano",
+            "Mês Específico",
+            "Intervalo de Meses"
         });
         
         cmbPeriodo.addActionListener(e -> {
+            atualizarVisibilidadeFiltros();
             atualizarPeriodo();
             carregarRelatorios();
         });
         
         panel.add(cmbPeriodo);
         
+        // Componentes para Mês Específico
+        lblMesEspecifico = new JLabel("Mês:");
+        panel.add(lblMesEspecifico);
+        
+        cmbMesEspecifico = new JComboBox<>(gerarOpcoesDesMeses());
+        cmbMesEspecifico.addActionListener(e -> {
+            atualizarPeriodo();
+            carregarRelatorios();
+        });
+        panel.add(cmbMesEspecifico);
+        
+        // Componentes para Intervalo de Meses
+        lblMesInicio = new JLabel("De:");
+        panel.add(lblMesInicio);
+        
+        cmbMesInicio = new JComboBox<>(gerarOpcoesDesMeses());
+        cmbMesInicio.addActionListener(e -> {
+            atualizarPeriodo();
+            carregarRelatorios();
+        });
+        panel.add(cmbMesInicio);
+        
+        lblMesAte = new JLabel("Até:");
+        panel.add(lblMesAte);
+        
+        cmbMesFim = new JComboBox<>(gerarOpcoesDesMeses());
+        cmbMesFim.setSelectedIndex(0);
+        cmbMesFim.addActionListener(e -> {
+            atualizarPeriodo();
+            carregarRelatorios();
+        });
+        panel.add(cmbMesFim);
+        
+        // Inicialmente, ocultar os filtros de mês
+        atualizarVisibilidadeFiltros();
+        
         return panel;
+    }
+    
+    private String[] gerarOpcoesDesMeses() {
+        String[] meses = new String[60]; // 5 anos de meses
+        LocalDate data = LocalDate.now();
+        
+        for (int i = 59; i >= 0; i--) {
+            LocalDate mes = data.minusMonths(i);
+            meses[59 - i] = mes.format(DateTimeFormatter.ofPattern("MMMM/yyyy"));
+        }
+        
+        return meses;
+    }
+    
+    private void atualizarVisibilidadeFiltros() {
+        String periodo = (String) cmbPeriodo.getSelectedItem();
+        
+        if ("Mês Específico".equals(periodo)) {
+            lblMesEspecifico.setVisible(true);
+            cmbMesEspecifico.setVisible(true);
+            lblMesInicio.setVisible(false);
+            cmbMesInicio.setVisible(false);
+            lblMesAte.setVisible(false);
+            cmbMesFim.setVisible(false);
+        } else if ("Intervalo de Meses".equals(periodo)) {
+            lblMesEspecifico.setVisible(false);
+            cmbMesEspecifico.setVisible(false);
+            lblMesInicio.setVisible(true);
+            cmbMesInicio.setVisible(true);
+            lblMesAte.setVisible(true);
+            cmbMesFim.setVisible(true);
+        } else {
+            lblMesEspecifico.setVisible(false);
+            cmbMesEspecifico.setVisible(false);
+            lblMesInicio.setVisible(false);
+            cmbMesInicio.setVisible(false);
+            lblMesAte.setVisible(false);
+            cmbMesFim.setVisible(false);
+        }
     }
     
     private void atualizarPeriodo() {
@@ -174,6 +258,57 @@ public class RelatoriosView extends JDialog {
                 dataInicio = hoje.withDayOfYear(1);
                 dataFim = hoje.withDayOfYear(hoje.lengthOfYear());
                 break;
+            case "Mês Específico":
+                extrairMesEspecifico();
+                break;
+            case "Intervalo de Meses":
+                extrairIntervaloMeses();
+                break;
+        }
+    }
+    
+    private void extrairMesEspecifico() {
+        String mesTexto = (String) cmbMesEspecifico.getSelectedItem();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM/yyyy");
+        try {
+            YearMonth yearMonth = YearMonth.parse(mesTexto, 
+                DateTimeFormatter.ofPattern("MMMM/yyyy", java.util.Locale.getDefault()));
+            dataInicio = yearMonth.atDay(1);
+            dataFim = yearMonth.atEndOfMonth();
+        } catch (Exception e) {
+            dataInicio = LocalDate.now().withDayOfMonth(1);
+            dataFim = LocalDate.now();
+        }
+    }
+    
+    private void extrairIntervaloMeses() {
+        String mesInicioTexto = (String) cmbMesInicio.getSelectedItem();
+        String mesFimTexto = (String) cmbMesFim.getSelectedItem();
+        
+        try {
+            YearMonth ymInicio = YearMonth.parse(mesInicioTexto, 
+                DateTimeFormatter.ofPattern("MMMM/yyyy", java.util.Locale.getDefault()));
+            YearMonth ymFim = YearMonth.parse(mesFimTexto, 
+                DateTimeFormatter.ofPattern("MMMM/yyyy", java.util.Locale.getDefault()));
+            
+            dataInicio = ymInicio.atDay(1);
+            dataFim = ymFim.atEndOfMonth();
+            
+            // Garantir que o mês de início não seja após o mês de fim
+            if (dataInicio.isAfter(dataFim)) {
+                LocalDate temp = dataInicio;
+                dataInicio = dataFim;
+                dataFim = temp;
+                
+                // Atualizar combobox para manter consistência
+                int idxInicio = cmbMesInicio.getSelectedIndex();
+                int idxFim = cmbMesFim.getSelectedIndex();
+                cmbMesInicio.setSelectedIndex(idxFim);
+                cmbMesFim.setSelectedIndex(idxInicio);
+            }
+        } catch (Exception e) {
+            dataInicio = LocalDate.now().withDayOfMonth(1);
+            dataFim = LocalDate.now();
         }
     }
     
