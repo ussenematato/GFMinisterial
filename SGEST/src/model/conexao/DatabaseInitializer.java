@@ -102,6 +102,50 @@ public final class DatabaseInitializer {
     private static final String SUPERADMIN_EMAIL = "superAdmin@mail.com";
     private static final String SUPERADMIN_SENHA_HASH = "e946ce6108c01272baad0cf544c9655c";
 
+    // Categorias padrão (mesmas de gestao_financeira.sql): nome, tipo, descricao, cor
+    private static final String[][] CATEGORIAS_PADRAO = {
+        {"Dizimos dos dizimos", "DESPESA", "Comparticipacao em 14% dos dizimos", "#990000"},
+        {"Comunicação", "DESPESA", "Creditos para comunicação", "#673AB7"},
+        {"Transporte", "DESPESA", "Combustível, transporte público", "#009688"},
+        {"Assistencias", "DESPESA", "Médico, remédios, plano de saúde, subsidios", "#E91E63"},
+        {"Lazer", "DESPESA", "Cinema, restaurantes, viagens", "#3F51B5"},
+        {"Educação", "DESPESA", "Cursos, livros, escola", "#9C27B0"},
+        {"Escola dominical", "RECEITA", "Colectas nas turmas da escola dominical", "#4CAF50"},
+        {"Dizimos", "RECEITA", "Dizimos dos menbros em Comunhao", "#8BC34A"},
+        {"Colectas", "RECEITA", "Recebimentos de colectas", "#CDDC39"},
+        {"Encontro das Senhoras", "RECEITA", "Colectas recebidas no encontro das senhoras", "#336600"},
+        {"Tafula Geral", "RECEITA", "Tafulas dos 2 domingos", "#FFFFCC"},
+        {"Tafula das Senhoras", "RECEITA", "Tafulas ref.ao cultos das Mulheres", "#66FF66"},
+        {"Água FIPAG", "DESPESA", "Facturas de Agua canalizada", "#FF99CC"},
+        {"Energia", "DESPESA", "Compra de energia credelec", "#FF3333"},
+        {"Limpeza e Higiene", "DESPESA", "Materiais de limpeza (Detergentes, papelhigienico, ect)", "#FF3333"},
+        {"Águas", "DESPESA", "Galões, Caixas de agua pequena", "#2196F3"},
+        {"Consumiveis", "DESPESA", "Resmas A4, envelopes", "#2196F3"},
+        {"Administração", "DESPESA", "Impressões, Cópias, Creditos para o staff", "#2196F3"},
+        {"Departamento de Som", "DESPESA", "Equipamentos, cabos, pilhas para micros", "#2196F3"},
+        {"Departamento de Mídia e Comunicação", "DESPESA", "Aquisição de cameras, pilhas, panfletos", "#2196F3"},
+        {"Aluguer de Materiais", "DESPESA", "Aluguer de carrinhas de mão, materiais", "#2196F3"},
+        {"Simbolos da Ceia", "DESPESA", "Pães, sumos", "#FF3333"},
+        {"Manutenções do Templo", "DESPESA", "Matérial eléctrico, canalização, pintura, mão-de-obra", "#FF3333"},
+        {"Seminários", "DESPESA", "Lanches, Contribuições para participação", "#FF0000"},
+        {"Visitações", "DESPESA", "Visitas a igrejas, congregações, celulas", "#2196F3"},
+        {"Contribuições aos Orgãos Ministerias", "DESPESA", "Concilio, Acção Social, Reuniões, DML", "#FF0000"},
+        {"Taxas e Impostos", "DESPESA", "Transferencia de valores, taxas municipais e impostos", "#CC0000"},
+        {"Fundo de maneio", "DESPESA", "Despesas pequenas correntes", "#FF0000"},
+        {"Transferência - Saída", "DESPESA", "Transferência entre contas (saída)", "#9E9E9E"},
+        {"Transferência - Entrada", "RECEITA", "Transferência entre contas (entrada)", "#4CAF50"},
+        {"Dizimos Regiões da Polana", "RECEITA", "14% dos Dizimos das regiões eclesiasticas da Polana Caniço", "#00CC99"},
+        {"Contribuição Para templos Regiao Polana", "DESPESA", "", "#2196F3"}
+    };
+
+    // Contas padrão (mesmas de gestao_financeira.sql): nome, tipo, saldo_inicial, saldo_atual, instituicao, ativo
+    private static final Object[][] CONTAS_PADRAO = {
+        {"Conta Bancaria", "CORRENTE", "5000.00", "45667.54", "Millenium Bim", 1},
+        {"Caixa", "CARTEIRA", "500.00", "0.00", "Dinheiro físico", 1},
+        {"MPesa", "CARTEIRA", "10000.00", "51.00", "Vodacom, SA", 0},
+        {"E-Mola/MPESA", "CARTEIRA", "500.00", "2437.00", "Movitel e Vodacom", 1}
+    };
+
     private DatabaseInitializer() {}
 
     public static void inicializar(Connection conexao) throws SQLException {
@@ -110,28 +154,84 @@ public final class DatabaseInitializer {
                 stmt.executeUpdate(sql);
             }
         }
-        garantirSuperAdminPadrao(conexao);
+        int superAdminId = garantirSuperAdminPadrao(conexao);
+        garantirCategoriasPadrao(conexao, superAdminId);
+        garantirContasPadrao(conexao, superAdminId);
     }
 
-    private static void garantirSuperAdminPadrao(Connection conexao) throws SQLException {
+    private static int garantirSuperAdminPadrao(Connection conexao) throws SQLException {
         try (PreparedStatement verificar = conexao.prepareStatement(
-                "SELECT COUNT(*) FROM usuarios WHERE email = ?")) {
+                "SELECT id FROM usuarios WHERE email = ?")) {
             verificar.setString(1, SUPERADMIN_EMAIL);
             try (ResultSet rs = verificar.executeQuery()) {
-                rs.next();
-                if (rs.getInt(1) > 0) {
-                    return;
+                if (rs.next()) {
+                    return rs.getInt(1);
                 }
             }
         }
 
         try (PreparedStatement inserir = conexao.prepareStatement(
-                "INSERT INTO usuarios (nome, email, senha_hash, perfil, ativo) VALUES (?, ?, ?, ?, 1)")) {
+                "INSERT INTO usuarios (nome, email, senha_hash, perfil, ativo) VALUES (?, ?, ?, ?, 1)",
+                Statement.RETURN_GENERATED_KEYS)) {
             inserir.setString(1, "Super Admin");
             inserir.setString(2, SUPERADMIN_EMAIL);
             inserir.setString(3, SUPERADMIN_SENHA_HASH);
             inserir.setString(4, "SUPERADMIN");
             inserir.executeUpdate();
+
+            try (ResultSet rs = inserir.getGeneratedKeys()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    private static void garantirCategoriasPadrao(Connection conexao, int usuarioId) throws SQLException {
+        try (Statement contagem = conexao.createStatement();
+             ResultSet rs = contagem.executeQuery("SELECT COUNT(*) FROM categorias")) {
+            rs.next();
+            if (rs.getInt(1) > 0) {
+                return;
+            }
+        }
+
+        try (PreparedStatement inserir = conexao.prepareStatement(
+                "INSERT INTO categorias (nome, tipo, descricao, usuario_id, cor, ativo) VALUES (?, ?, ?, ?, ?, 1)")) {
+            for (String[] categoria : CATEGORIAS_PADRAO) {
+                inserir.setString(1, categoria[0]);
+                inserir.setString(2, categoria[1]);
+                inserir.setString(3, categoria[2]);
+                inserir.setInt(4, usuarioId);
+                inserir.setString(5, categoria[3]);
+                inserir.addBatch();
+            }
+            inserir.executeBatch();
+        }
+    }
+
+    private static void garantirContasPadrao(Connection conexao, int usuarioId) throws SQLException {
+        try (Statement contagem = conexao.createStatement();
+             ResultSet rs = contagem.executeQuery("SELECT COUNT(*) FROM contas")) {
+            rs.next();
+            if (rs.getInt(1) > 0) {
+                return;
+            }
+        }
+
+        try (PreparedStatement inserir = conexao.prepareStatement(
+                "INSERT INTO contas (nome, tipo, saldo_inicial, saldo_atual, instituicao, usuario_id, ativo) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+            for (Object[] conta : CONTAS_PADRAO) {
+                inserir.setString(1, (String) conta[0]);
+                inserir.setString(2, (String) conta[1]);
+                inserir.setBigDecimal(3, new java.math.BigDecimal((String) conta[2]));
+                inserir.setBigDecimal(4, new java.math.BigDecimal((String) conta[3]));
+                inserir.setString(5, (String) conta[4]);
+                inserir.setInt(6, usuarioId);
+                inserir.setInt(7, (Integer) conta[5]);
+                inserir.addBatch();
+            }
+            inserir.executeBatch();
         }
     }
 }
