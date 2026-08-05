@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/ussenematato/**)",
+      "Bash(timeout 5 curl -sI https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.3/sqlite-jdbc-3.46.1.3.jar)",
+      "Bash(timeout 10 curl -s https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/maven-metadata.xml)",
+      "Bash(timeout 30 curl -sL -o lib/sqlite-jdbc-3.53.2.1.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.53.2.1/sqlite-jdbc-3.53.2.1.jar)",
+      "Bash(git rm *)",
+      "Bash(javac -version)",
+      "Bash(java -version)",
+      "Bash(python3 -c \"import sqlite3; print\\('ok'\\)\")",
+      "Bash(python3 /tmp/claude-1000/-home-ussenematato-Documents-GitHub-GFMinisterial-SGEST/48ff5226-0fc4-4d77-855c-6b0e4726ab7b/scratchpad/migrar.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -)",
+      "Bash(javac -nowarn -encoding UTF-8 -cp lib/* -d /tmp/claude-1000/-home-ussenematato-Documents-GitHub-GFMinisterial-SGEST/48ff5226-0fc4-4d77-855c-6b0e4726ab7b/scratchpad/build @/tmp/claude-1000/-home-ussenematato-Documents-GitHub-GFMinisterial-SGEST/48ff5226-0fc4-4d77-855c-6b0e4726ab7b/scratchpad/sources.list)",
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(git rev-list *)",
+      "Bash(SCRATCH=/tmp/claude-1000/-home-ussenematato-Documents-GitHub-GFMinisterial-SGEST/48ff5226-0fc4-4d77-855c-6b0e4726ab7b/scratchpad *)",
+      "Bash(javac -nowarn -encoding UTF-8 -cp lib/* -d /tmp/claude-1000/-home-ussenematato-Documents-GitHub-GFMinisterial-SGEST/48ff5226-0fc4-4d77-855c-6b0e4726ab7b/scratchpad/final_build @/tmp/claude-1000/-home-ussenematato-Documents-GitHub-GFMinisterial-SGEST/48ff5226-0fc4-4d77-855c-6b0e4726ab7b/scratchpad/final_sources.list)",
+      "Bash(rm -rf /tmp/claude-1000/-home-ussenematato-Documents-GitHub-GFMinisterial-SGEST/48ff5226-0fc4-4d77-855c-6b0e4726ab7b/scratchpad/*)"
+    ],
+    "additionalDirectories": [
+      "/tmp/claude-1000/-home-ussenematato-Documents-GitHub-GFMinisterial-SGEST/48ff5226-0fc4-4d77-855c-6b0e4726ab7b/scratchpad"
+    ]
+  }
+}

@@ -1,6 +1,8 @@
 package model.conexao;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -95,6 +97,11 @@ public final class DatabaseInitializer {
         "CREATE INDEX IF NOT EXISTS idx_logs_operacao_data ON logs(operacao, data_hora)"
     };
 
+    // Conta SuperAdmin padrão, criada automaticamente se ainda não existir.
+    // Senha igual ao email; hash MD5 (mesmo esquema usado em UsuarioController.hashSenha).
+    private static final String SUPERADMIN_EMAIL = "superAdmin@mail.com";
+    private static final String SUPERADMIN_SENHA_HASH = "e946ce6108c01272baad0cf544c9655c";
+
     private DatabaseInitializer() {}
 
     public static void inicializar(Connection conexao) throws SQLException {
@@ -102,6 +109,29 @@ public final class DatabaseInitializer {
             for (String sql : SCHEMA) {
                 stmt.executeUpdate(sql);
             }
+        }
+        garantirSuperAdminPadrao(conexao);
+    }
+
+    private static void garantirSuperAdminPadrao(Connection conexao) throws SQLException {
+        try (PreparedStatement verificar = conexao.prepareStatement(
+                "SELECT COUNT(*) FROM usuarios WHERE email = ?")) {
+            verificar.setString(1, SUPERADMIN_EMAIL);
+            try (ResultSet rs = verificar.executeQuery()) {
+                rs.next();
+                if (rs.getInt(1) > 0) {
+                    return;
+                }
+            }
+        }
+
+        try (PreparedStatement inserir = conexao.prepareStatement(
+                "INSERT INTO usuarios (nome, email, senha_hash, perfil, ativo) VALUES (?, ?, ?, ?, 1)")) {
+            inserir.setString(1, "Super Admin");
+            inserir.setString(2, SUPERADMIN_EMAIL);
+            inserir.setString(3, SUPERADMIN_SENHA_HASH);
+            inserir.setString(4, "SUPERADMIN");
+            inserir.executeUpdate();
         }
     }
 }
