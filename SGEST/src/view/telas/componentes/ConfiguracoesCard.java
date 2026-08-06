@@ -45,7 +45,7 @@ public class ConfiguracoesCard extends CardBase {
         // Botão: Sobre
         JButton btnSobre = criarBotaoConfiguracao(
             "Sobre o Sistema",
-            "Informações do SGEST",
+            "Informações do SGFM",
             new Color(76, 175, 80)
         );
         btnSobre.addActionListener(e -> mostrarSobre());
@@ -105,11 +105,12 @@ public class ConfiguracoesCard extends CardBase {
     }
     
     private void mostrarSobre() {
-        String msg = "Sistema de Gestão Financeira Ministerial (SGEST)\n\n" +
+        String msg = "Sistema de Gestão Financeira Ministerial (SGFM)\n\n" +
                      "Versão: 1.0\n" +
-                     "Desenvolvido para gerenciar contas, transações e relatórios financeiros.\n\n" +
+                     "Desenvolvido para gerenciar contas, transações e relatórios financeiros em Igrejas/Congregações.\n\n" +
+                     "Por: Ussene Matato (ussene.c.matato@gmail.com)\n\n" +
                      "© 2026 - Todos os direitos reservados.";
-        JOptionPane.showMessageDialog(this, msg, "Sobre o SGEST", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, msg, "Sobre o SGFM", JOptionPane.INFORMATION_MESSAGE);
     }
     
     @Override

@@ -17,6 +17,8 @@ public class Conexao {
         if (conexao == null) {
             try {
                 Class.forName("org.sqlite.JDBC");
+                //String url = "jdbc:sqlite:" + System.getProperty("user.home") 
+            //+ "/SeuSistema/database.db";
                 String url = "jdbc:sqlite:" + caminhoBaseDados();
                 conexao = DriverManager.getConnection(url);
 
@@ -40,7 +42,7 @@ public class Conexao {
      * programa está a ser executado (pasta do .jar), para que a base
      * acompanhe a aplicação em qualquer computador.
      */
-    private static String caminhoBaseDados() {
+/*    private static String caminhoBaseDados() {
         try {
             File local = new File(Conexao.class.getProtectionDomain()
                     .getCodeSource().getLocation().toURI());
@@ -53,7 +55,37 @@ public class Conexao {
             return new File(NOME_BASE).getAbsolutePath();
         }
     }
+*/
+    
+    private static String caminhoBaseDados() {
+    try {
+        // ✔️ Usa APPDATA (correto para aplicações instaladas)
+        String appData = System.getenv("APPDATA");
 
+        if (appData != null && !appData.isEmpty()) {
+
+            File pastaDados = new File(appData, "SGFM");
+
+            if (!pastaDados.exists()) {
+                pastaDados.mkdirs();
+            }
+
+            return new File(pastaDados, NOME_BASE).getAbsolutePath();
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    // ✔️ Fallback (caso APPDATA falhe)
+    File pastaAtual = new File("data");
+
+    if (!pastaAtual.exists()) {
+        pastaAtual.mkdirs();
+    }
+
+    return new File(pastaAtual, NOME_BASE).getAbsolutePath();
+}
     public static void fecharConexao() {
         if (conexao != null) {
             try {

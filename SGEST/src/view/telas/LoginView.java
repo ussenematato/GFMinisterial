@@ -4,11 +4,10 @@ import controller.UsuarioController;
 import controller.LogController;
 import model.entity.Usuario;
 import util.UIStyler;
+import util.ResourceLoader;
 import javax.swing.*;
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 
 public class LoginView extends JFrame {
     private JTextField txtEmail;
@@ -30,7 +29,7 @@ public class LoginView extends JFrame {
     }
     
     private void initComponents() {
-        setTitle("SGEST - Sistema de Gestão Financeira Ministerial");
+        setTitle("SGFM - Sistema de Gestão Financeira Ministerial");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setUndecorated(false);
         setResizable(false);
@@ -57,17 +56,12 @@ public class LoginView extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(255, 255, 255)); // Branco como fundo
         
-        // Tentar carregar logo
+        // Tentar carregar logo usando ResourceLoader (funciona em JAR e desenvolvimento)
         try {
-            // Tentar carregar LogoOficial.jpeg primeiro
-            File logoFile = new File("src/view/telas/logos/Logo.jpeg");
-            if (!logoFile.exists()) {
-                logoFile = new File("src/view/telas/logos/Logo.jpeg");
-            }
+            // Tentar carregar Logo.jpeg do classpath
+            BufferedImage img = ResourceLoader.loadImage("view/telas/logos/Logo.jpeg");
             
-            if (logoFile.exists()) {
-                BufferedImage img = ImageIO.read(logoFile);
-                
+            if (img != null) {
                 // Redimensionar a imagem para caber no painel
                 Image scaledImg = img.getScaledInstance(400, 400, Image.SCALE_SMOOTH);
                 ImageIcon icon = new ImageIcon(scaledImg);
@@ -79,37 +73,35 @@ public class LoginView extends JFrame {
                 panel.add(lblLogo, BorderLayout.CENTER);
             } else {
                 // Se não encontrar logo, mostrar texto
-                JLabel lblLogo = new JLabel("SGEST");
-                lblLogo.setFont(new Font("Arial", Font.BOLD, 48));
-                lblLogo.setForeground(Color.WHITE);
-                lblLogo.setHorizontalAlignment(JLabel.CENTER);
-                lblLogo.setVerticalAlignment(JLabel.CENTER);
-                
-                JLabel lblSubtitulo = new JLabel("Sistema de Gestão Financeira Ministerial");
-                lblSubtitulo.setFont(new Font("Arial", Font.PLAIN, 16));
-                lblSubtitulo.setForeground(new Color(200, 200, 200));
-                lblSubtitulo.setHorizontalAlignment(JLabel.CENTER);
-                
-                JPanel panelTexto = new JPanel(new BorderLayout(0, 20));
-                panelTexto.setBackground(new Color(25, 25, 112));
-                panelTexto.add(lblLogo, BorderLayout.CENTER);
-                panelTexto.add(lblSubtitulo, BorderLayout.SOUTH);
-                
-                panel.add(panelTexto, BorderLayout.CENTER);
+                mostrarFallbackLogo(panel);
             }
         } catch (Exception e) {
             // Fallback: mostrar texto
-            JLabel lblLogo = new JLabel("SGEST");
-            lblLogo.setFont(new Font("Arial", Font.BOLD, 48));
-            lblLogo.setForeground(Color.WHITE);
-            lblLogo.setHorizontalAlignment(JLabel.CENTER);
-            lblLogo.setVerticalAlignment(JLabel.CENTER);
-            
-            panel.add(lblLogo, BorderLayout.CENTER);
+            mostrarFallbackLogo(panel);
             e.printStackTrace();
         }
         
         return panel;
+    }
+    
+    private void mostrarFallbackLogo(JPanel panel) {
+        JLabel lblLogo = new JLabel("SGFM");
+        lblLogo.setFont(new Font("Arial", Font.BOLD, 48));
+        lblLogo.setForeground(Color.WHITE);
+        lblLogo.setHorizontalAlignment(JLabel.CENTER);
+        lblLogo.setVerticalAlignment(JLabel.CENTER);
+        
+        JLabel lblSubtitulo = new JLabel("Sistema de Gestão Financeira Ministerial");
+        lblSubtitulo.setFont(new Font("Arial", Font.PLAIN, 16));
+        lblSubtitulo.setForeground(new Color(200, 200, 200));
+        lblSubtitulo.setHorizontalAlignment(JLabel.CENTER);
+        
+        JPanel panelTexto = new JPanel(new BorderLayout(0, 20));
+        panelTexto.setBackground(new Color(25, 25, 112));
+        panelTexto.add(lblLogo, BorderLayout.CENTER);
+        panelTexto.add(lblSubtitulo, BorderLayout.SOUTH);
+        
+        panel.add(panelTexto, BorderLayout.CENTER);
     }
     
     private JPanel criarPanelLogin() {
